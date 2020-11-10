@@ -138,7 +138,7 @@ def get_line_slope_intercept(line):
     intercept = y1 - slope * x1
     return slope, intercept
         
-def get_lines_slope_intecept(lines):
+def get_lines_slope_intecept(lines, slope_threshold = 0.3):
     left_lines = []
     right_lines = []
     left_lengths = []
@@ -148,10 +148,10 @@ def get_lines_slope_intecept(lines):
         if slope == math.inf:
             continue
         line_len = get_line_length(line)
-        if slope < 0:
+        if slope < - slope_threshold:
             left_lines.append((slope, intercept))
             left_lengths.append(line_len)
-        else :
+        elif slope > slope_threshold :
             right_lines.append((slope, intercept))
             right_lengths.append(line_len)
             
@@ -161,25 +161,39 @@ def get_lines_slope_intecept(lines):
     
     return left_avg, right_avg
 
-def convert_slope_intercept_to_line(y1, y2 , line):
+def convert_slope_intercept_to_line(y1, y2 , line, xmax):
     if line is None:
         return None
     
     slope, intercept = line
     x1 = int((y1- intercept)/slope)
-    y1 = int(y1)
+    if x1 < 0:
+        x1 = 0
+        y1 = int(intercept)
+    elif x1 > xmax:
+        x1 = xmax
+        y1 = int(x1 * slope + intercept)
+    else:
+        y1 = int(y1)
     x2 = int((y2- intercept)/slope)
-    y2 = int(y2)
+    if x2 < 0:
+        x2 = 0
+        y2 = int(intercept)
+    elif x2 > xmax:
+        x2 = xmax
+        y2 = int(x2 * slope + intercept)
+    else:
+        y2 = int(y2)
     return((x1, y1),(x2, y2))
 
 def get_lane_lines(img, lines):
     left_avg, right_avg = get_lines_slope_intecept(lines)
     
-    y1 = img.shape[0]
+    y1 = img.shape[0] - 1
     y2 = img.shape[0] * 0.6
     
-    left_lane = convert_slope_intercept_to_line(y1, y2, left_avg)
-    right_lane = convert_slope_intercept_to_line(y1, y2, right_avg)
+    left_lane = convert_slope_intercept_to_line(y1, y2, left_avg, img.shape[1]-1)
+    right_lane = convert_slope_intercept_to_line(y1, y2, right_avg, img.shape[1]-1)
     return left_lane, right_lane
 
 def draw_weighted_lines(img, lines, color=[255, 0, 0], thickness=2, alpha = 1.0, beta = 0.95, gamma= 0):
@@ -193,6 +207,8 @@ def process_image(image, calc_mean=False, **kwargs):
     # NOTE: The output you return should be a color image (3 channel) for processing video below
     # TODO: put your pipeline here,
     # you should return the final output (image where lines are drawn on lanes)
+    if image is None or len(image.shape) != 3:
+        return None, None, None
     if calc_mean:
         assert('left_mem' in kwargs.keys())
         assert('right_mem' in kwargs.keys())
@@ -259,11 +275,42 @@ class LaneDetector(Detector):
 
     def run_in_series(self, **kwargs) -> Any:
         rgb_img = self.agent.front_rgb_camera.data
-        depth_img = self.agent.front_depth_camera.data
         processed_img, left_lane, right_lane = process_image(rgb_img)
+        left_lane_world, right_lane_world = None, None
+        if left_lane is not None:
+            left_lane_world = self.calculate_world_cords(np.array(left_lane).T[::-1])
+        if right_lane is not None:
+            right_lane_world = self.calculate_world_cords(np.array(right_lane).T[::-1])
         if processed_img is not None:
+            if left_lane_world is not None:
+                processed_img = cv2.putText(processed_img, str(left_lane_world.tolist()), (0, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1, cv2.LINE_AA)
+            if right_lane_world is not None:
+                processed_img = cv2.putText(processed_img, str(right_lane_world.tolist()), (0, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1, cv2.LINE_AA)
             cv2.imshow("processed img", processed_img)
-        return left_lane, right_lane
+        return left_lane_world, right_lane_world
 
     def run_in_threaded(self, **kwargs):
         pass
+
+    def calculate_world_cords(self, coords):
+        depth_img = self.agent.front_depth_camera.data
+        raw_p2d = np.reshape(self._pix2xyz(depth_img=depth_img, i=coords[0], j=coords[1]), (3, np.shape(coords)[1])).T
+
+        cords_y_minus_z_x = np.linalg.inv(self.agent.front_depth_camera.intrinsics_matrix) @ raw_p2d.T
+        cords_xyz_1 = np.vstack([
+            cords_y_minus_z_x[2, :],
+            cords_y_minus_z_x[0, :],
+            -cords_y_minus_z_x[1, :],
+            np.ones((1, np.shape(cords_y_minus_z_x)[1]))
+        ])
+        points: np.ndarray = self.agent.vehicle.transform.get_matrix() @ self.agent.front_depth_camera.transform.get_matrix() @ cords_xyz_1
+        points = points.T[:, :3]
+        return points
+
+    @staticmethod
+    def _pix2xyz(depth_img, i, j):
+        return [
+            depth_img[i, j] * j * 1000,
+            depth_img[i, j] * i * 1000,
+            depth_img[i, j] * 1000
+        ]
