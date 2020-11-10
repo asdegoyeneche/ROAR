@@ -1,3 +1,4 @@
+from ROAR.perception_module.lane_detector import LaneDetector
 from ROAR.agent_module.agent import Agent
 from pathlib import Path
 from ROAR.control_module.pid_controller import PIDController
@@ -27,6 +28,7 @@ class PIDAgent(Agent):
             mission_planner=self.mission_planner,
             behavior_planner=self.behavior_planner,
             closeness_threshold=1)
+        self.lane_detector = LaneDetector(agent=self)
         self.logger.debug(
             f"Waypoint Following Agent Initiated. Reading f"
             f"rom {self.route_file_path.as_posix()}")
@@ -36,6 +38,7 @@ class PIDAgent(Agent):
         super(PIDAgent, self).run_step(vehicle=vehicle,
                                        sensors_data=sensors_data)
         self.transform_history.append(self.vehicle.transform)
+        self.lane_detector.run_in_series()
         if self.local_planner.is_done():
             control = VehicleControl()
             self.logger.debug("Path Following Agent is Done. Idling.")
