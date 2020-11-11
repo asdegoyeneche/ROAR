@@ -23,7 +23,8 @@ class PIDController(Controller):
         self.config = json.load(Path(agent.agent_settings.pid_config_file_path).open(mode='r'))
         self.long_pid_controller = LongPIDController(agent=agent,
                                                      throttle_boundary=throttle_boundary,
-                                                     max_speed=self.max_speed, config=self.config["longitudinal_controller"])
+                                                     max_speed=self.max_speed, config=self.config["longitudinal_controller"],
+                                                     errAlpha=0.2)
         self.lat_pid_controller = LatPIDController(
             agent=agent,
             config=self.config["latitudinal_controller"],
@@ -32,9 +33,13 @@ class PIDController(Controller):
         self.logger = logging.getLogger(__name__)
 
     def run_in_series(self, next_waypoint: Transform, **kwargs) -> VehicleControl:
+        steering, errBoi = self.lat_pid_controller.run_in_series(next_waypoint=next_waypoint)
+
+        # feed the error into the longitudinal controller order to slow down when off target
         throttle = self.long_pid_controller.run_in_series(next_waypoint=next_waypoint,
-                                                          target_speed=kwargs.get("target_speed", self.max_speed))
-        steering = self.lat_pid_controller.run_in_series(next_waypoint=next_waypoint)
+                                                          target_speed=kwargs.get("target_speed", self.max_speed),
+                                                          errBoi=np.abs(errBoi))
+
         return VehicleControl(throttle=throttle, steering=steering)
 
     @staticmethod
@@ -51,17 +56,28 @@ class PIDController(Controller):
 
 class LongPIDController(Controller):
     def __init__(self, agent, config: dict, throttle_boundary: Tuple[float, float], max_speed: float,
-                 dt: float = 0.03, **kwargs):
+                 dt: float = 0.03, errAlpha: float = 1.0, **kwargs):
         super().__init__(agent, **kwargs)
         self.config = config
         self.max_speed = max_speed
         self.throttle_boundary = throttle_boundary
         self._error_buffer = deque(maxlen=10)
+        self.errBoi = 0.0
+        self.errAlpha = errAlpha
 
         self._dt = dt
 
-    def run_in_series(self, next_waypoint: Transform, **kwargs) -> float:
+    def run_in_series(self, next_waypoint: Transform, errBoi: float = 0.0, **kwargs) -> float:
         target_speed = min(self.max_speed, kwargs.get("target_speed", self.max_speed))
+
+        # if we are very off track, update error to reflect that
+        if errBoi > self.errBoi:
+            self.errBoi = errBoi
+        else: # if we are getting back on track, gradually reduce our error 
+            self.errBoi = self.errBoi*(1-self.errAlpha) + errBoi*self.errAlpha
+        # reduce our target speed based on how far off target we are
+        target_speed *= (math.exp(-self.errBoi) - 1)/2 + 1
+        
         current_speed = Vehicle.get_speed(self.agent.vehicle)
 
         k_p, k_d, k_i = PIDController.find_k_values(vehicle=self.agent.vehicle, config=self.config)
@@ -134,4 +150,4 @@ class LatPIDController(Controller):
         lat_control = float(
             np.clip((k_p * _dot) + (k_d * _de) + (k_i * _ie), self.steering_boundary[0], self.steering_boundary[1])
         )
-        return lat_control
+        return lat_control, _dot
