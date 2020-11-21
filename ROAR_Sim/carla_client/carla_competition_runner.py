@@ -1,69 +1,46 @@
 import carla
 from carla import ColorConverter as cc
-from ROAR_Sim.carla_client.util.sensors import CollisionSensor
 from ROAR_Sim.configurations.configuration import Configuration as CarlaConfig
 import logging
 import pygame
 from ROAR.utilities_module.data_structures_models import SensorsData
 from ROAR.utilities_module.vehicle_models import Vehicle
+from ROAR.agent_module.agent import Agent
 from typing import Tuple
 from Bridges.carla_bridge import CarlaBridge
 from ROAR_Sim.carla_client.util.hud import HUD
 from ROAR_Sim.carla_client.util.world import World
 from ROAR_Sim.carla_client.util.keyboard_control import KeyboardControl
 from ROAR.configurations.configuration import Configuration as AgentConfig
+from ROAR_Sim.carla_client.util.sensors import CollisionSensor
 from pathlib import Path
+from ROAR.agent_module.pure_pursuit_agent import PurePursuitAgent
 from typing import List, Dict, Any
 from ROAR.utilities_module.vehicle_models import VehicleControl
 import json
-from typing import Optional
-import numpy as np
-import traceback
+
 
 class CarlaRunner:
 
-    def __init__(self,
-                 carla_settings: CarlaConfig,
-                 agent_settings: AgentConfig,
-                 npc_agent_class, competition_mode=False, max_collision=1000):
-        """
-
-        Args:
-            carla_settings:
-            agent_settings:
-            npc_agent_class:
-            competition_mode: if True, will exist when max_collision is reached
-            max_collision: number of maximum collision allowed
-        """
+    def __init__(self, carla_settings: CarlaConfig,
+                 agent_settings: AgentConfig, max_collision=1000):
         self.carla_settings = carla_settings
         self.agent_settings = agent_settings
         self.carla_bridge = CarlaBridge()
-        self.npc_agent_class = npc_agent_class
         self.world = None
         self.client = None
         self.controller = None
         self.display = None
         self.agent = None
-
-        self.npc_agents: Dict[npc_agent_class, Any] = {}
-        self.agent_collision_counter = 0
-
-        self.competition_mode = competition_mode
         self.max_collision = max_collision
-        self.start_simulation_time: Optional[float] = None
-        self.start_vehicle_position: Optional[np.array] = None
-        self.end_simulation_time: Optional[float] = None
-        self.end_vehicle_position: Optional[np.array] = None
+        self.npc_agents: Dict[Agent, Any] = {}
+        self.agent_collision_counter = 0
 
         self.logger = logging.getLogger(__name__)
         self.timestep_counter = 0
 
     def set_carla_world(self) -> Vehicle:
-        """
-        Initiating the vehicle with loading messages
-        Returns:
-            Vehicle Information
-        """
+        """Initiating the vehicle with loading messages"""
 
         try:
             pygame.init()
@@ -103,30 +80,28 @@ class CarlaRunner:
                 f"Unable to initiate the world due to error: {e}")
             raise e
 
-    def start_game_loop(self, agent, use_manual_control=False, max_timestep=1e20):
+    def start_game_loop(self, agent: Agent, use_manual_control=False, max_timestep=1e20) -> float:
         """Start running the vehicle and stop when finished running
-        the track"""
+        the track
+        and return a score
+        """
 
         self.agent = agent
         try:
             self.logger.debug("Initiating game")
-            self.agent.start_module_threads()
             clock = pygame.time.Clock()
-            self.start_simulation_time = self.world.hud.simulation_time
-            self.start_vehicle_position = self.agent.vehicle.transform.location.to_array()
             while True and self.timestep_counter < max_timestep:
-
-                # make sure the program does not run above 60 frames per second
+                # make sure the program does not run above 40 frames per second
                 # this allow proper synchrony between server and client
                 clock.tick_busy_loop(60)
-                should_continue, carla_control = self.controller.parse_events(client=self.client,
-                                                                              world=self.world,
-                                                                              clock=clock)
+                should_continue, carla_control = self.controller. \
+                    parse_events(client=self.client,
+                                 world=self.world,
+                                 clock=clock)
 
                 collision_sensor: CollisionSensor = self.world.collision_sensor
-
-                if self.competition_mode and len(collision_sensor.history) > self.max_collision:
-                    self.agent_collision_counter = len(collision_sensor.history)
+                if len(collision_sensor.history) > self.max_collision:
+                    # you have collided for > 1000 frames
                     should_continue = False
 
                 if not should_continue:
@@ -136,6 +111,7 @@ class CarlaRunner:
                 self.world.render(display=self.display)
                 pygame.display.flip()
                 sensor_data, new_vehicle = self.convert_data()
+
                 if self.carla_settings.save_semantic_segmentation and self.world.semantic_segmentation_sensor_data:
                     self.world.semantic_segmentation_sensor_data.save_to_disk((Path(
                         "./data/output") / "ss" / f"frame_{self.agent.time_counter}.png").as_posix(),
@@ -148,8 +124,9 @@ class CarlaRunner:
                     if self.agent is None:
                         raise Exception(
                             "In autopilot mode, but no agent is defined.")
-                    agent_control = self.agent.run_step(vehicle=new_vehicle,
-                                                        sensors_data=sensor_data)
+                    agent_control = self.agent. \
+                        run_step(vehicle=new_vehicle,
+                                 sensors_data=sensor_data)
                     if not use_manual_control:
                         carla_control = self.carla_bridge. \
                             convert_control_from_agent_to_source(agent_control)
@@ -158,15 +135,22 @@ class CarlaRunner:
                 self.timestep_counter += 1
         except Exception as e:
             self.logger.error(f"Error happened, exiting safely. Error: {e}")
-            self.logger.error(traceback.print_exc())
 
         finally:
             self.on_finish()
 
+            print(len(self.world.collision_sensor.history))
+            if len(self.world.collision_sensor.history) > self.max_collision:
+                return 0
+            else:
+                return 1
+
     def on_finish(self):
         self.logger.debug("Ending Game")
-        self.end_simulation_time = self.world.hud.simulation_time
-        self.end_vehicle_position = self.agent.vehicle.transform.location.to_array()
+        # output_file = Path("./data/easy_default_waypoints.txt")
+        # f = output_file.open('w')
+        # for t in self.agent.transform_history[::50]:
+        #     f.write(str(t) + "\n")
         if self.world is not None:
             self.world.destroy()
             self.logger.debug("All actors are destroyed")
@@ -208,7 +192,7 @@ class CarlaRunner:
         try:
             for agent, actor in self.npc_agents.items():
                 new_vehicle = self.carla_bridge.convert_vehicle_from_source_to_agent(actor)
-                curr_control: VehicleControl = agent.run_in_series(sensors_data=SensorsData(), vehicle=new_vehicle)
+                curr_control: VehicleControl = agent.run_step(sensors_data=SensorsData(), vehicle=new_vehicle)
                 carla_control = self.carla_bridge.convert_control_from_agent_to_source(curr_control)
                 actor.apply_control(carla_control)
         except Exception as e:
@@ -225,6 +209,7 @@ class CarlaRunner:
 
         self.world.spawn_npcs(npc_configs)
         self.npc_agents = {
-            self.npc_agent_class(vehicle=actor, agent_settings=npc_config): actor for actor, npc_config in
+            PurePursuitAgent(vehicle=actor, agent_settings=npc_config,
+                             target_speed=npc_config.max_speed): actor for actor, npc_config in
             self.world.npcs_mapping.values()
         }

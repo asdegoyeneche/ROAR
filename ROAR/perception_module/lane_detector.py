@@ -1,4 +1,6 @@
+from ROAR.utilities_module.utilities import dist_to_line_2d
 from abc import abstractmethod
+from collections import deque
 import logging
 from typing import Any
 from ROAR.agent_module.agent import Agent
@@ -203,104 +205,116 @@ def draw_weighted_lines(img, lines, color=[255, 0, 0], thickness=2, alpha = 1.0,
             cv2.line(mask_img, *line, color, thickness)            
     return weighted_img(mask_img, img, alpha, beta, gamma)
 
-def process_image(image, calc_mean=False, **kwargs):
-    # NOTE: The output you return should be a color image (3 channel) for processing video below
-    # TODO: put your pipeline here,
-    # you should return the final output (image where lines are drawn on lanes)
-    if image is None or len(image.shape) != 3:
-        return None, None, None
-    if calc_mean:
-        assert('left_mem' in kwargs.keys())
-        assert('right_mem' in kwargs.keys())
-    
-    original_img = np.copy(image)
-    # cv2.imshow("original img", original_img)
-    
-    # convert to grayscale
-    gray_img = grayscale(image)
-    
-    # darken the grayscale
-    # darkened_img = adjust_gamma(gray_img, 1)
-    # cv2.imshow("darkened img", darkened_img)
-    
-    # Color Selection
-    # white_mask = isolate_color_mask(to_hls(image), np.array([0, 0, 0], dtype=np.uint8), np.array([200, 255, 255], dtype=np.uint8))
-    # cv2.imshow("white mask", white_mask)
-    # yellow_mask = isolate_color_mask(to_hls(image), np.array([10, 0, 100], dtype=np.uint8), np.array([40, 255, 255], dtype=np.uint8))
-    # cv2.imshow("yellow mask", yellow_mask)
-    # mask = cv2.bitwise_or(white_mask, yellow_mask)
-    # cv2.imshow("mask", mask)
-    
-    # colored_img = cv2.bitwise_and(darkened_img, darkened_img, mask=mask)
-    
-    # Apply Gaussian Blur
-    # blurred_img = gaussian_blur(colored_img, kernel_size=7)
-    
-    # Apply Canny edge filter
-    canny_img = canny(gray_img, low_threshold=70, high_threshold=140)
-    # cv2.imshow("canny_img", canny_img)
-    
-    # Get Area of Interest
-    aoi_img = get_aoi(canny_img)
-    
-    # Apply Hough lines
-    hough_lines = get_hough_lines(aoi_img)
-    # hough_img = draw_lines(original_img, hough_lines)
-    # cv2.imshow("hough_img", hough_img)
-
-    if hough_lines is None:
-        return None, None, None
-    
-    # Extrapolation and averaging
-    left_lane, right_lane = get_lane_lines(original_img, hough_lines)
-    
-    if calc_mean:
-        if left_lane is not None and right_lane is not None:
-            kwargs['left_mem'].append(left_lane)
-            kwargs['right_mem'].append(right_lane)
-        left_mean = np.mean(kwargs['left_mem'], axis=0, dtype=np.int32)
-        right_mean = np.mean(kwargs['right_mem'], axis=0, dtype=np.int32)
-        left_lane_avg = tuple(map(tuple, left_mean))
-        right_lane_avg = tuple(map(tuple, right_mean))
-        result = draw_weighted_lines(original_img, [left_lane_avg, right_lane_avg], thickness= 10)
-        return result, left_lane, right_lane
-    
-    result = draw_weighted_lines(original_img, [left_lane, right_lane], thickness= 10)
-       
-    return result, left_lane, right_lane
-
 class LaneDetector(Detector):
-    def __init__(self, agent: Agent, **kwargs):
+    def __init__(self, agent: Agent, mem_size: int = 5, **kwargs):
         super().__init__(agent, **kwargs)
+        self.left_lane = None # lastest left lane coordinates in world frame
+        self.right_lane = None # lastest right lane coordinates in world frame
+        self.lane_center = None
+        self.dist_to_lane_center = 0 # distance to lane center, positive when car is on the right side of the lane center
+        # self.left_mem = deque(mem_size)
+        # self.right_mem = deque(mem_size)
 
     def run_in_series(self, **kwargs) -> Any:
         rgb_img = self.agent.front_rgb_camera.data
-        processed_img, left_lane, right_lane = process_image(rgb_img)
-        left_lane_world, right_lane_world = None, None
-        if left_lane is not None:
-            left_lane_world = self.calculate_world_cords(np.array(left_lane).T[::-1])
-        if right_lane is not None:
-            right_lane_world = self.calculate_world_cords(np.array(right_lane).T[::-1])
-        if processed_img is not None:
-            if left_lane_world is not None:
-                processed_img = cv2.putText(processed_img, str(left_lane_world.tolist()), (0, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1, cv2.LINE_AA)
-            if right_lane_world is not None:
-                processed_img = cv2.putText(processed_img, str(right_lane_world.tolist()), (0, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1, cv2.LINE_AA)
-            cv2.imshow("processed img", processed_img)
-        return left_lane_world, right_lane_world
+        self.dist_to_lane_center = self.process_image(rgb_img, visualize=False)
+        return self.dist_to_lane_center
 
     def run_in_threaded(self, **kwargs):
         pass
 
+    def process_image(self, image, visualize=False, **kwargs):
+        # NOTE: The output you return should be a color image (3 channel) for processing video below
+        # TODO: put your pipeline here,
+        # you should return the final output (image where lines are drawn on lanes)
+        if image is None or len(image.shape) != 3:
+            return None
+
+        original_img = np.copy(image)
+        # cv2.imshow("original img", original_img)
+        
+        # convert to grayscale
+        gray_img = grayscale(image)
+        
+        # darken the grayscale
+        # darkened_img = adjust_gamma(gray_img, 1)
+        # cv2.imshow("darkened img", darkened_img)
+        
+        # Color Selection
+        # white_mask = isolate_color_mask(to_hls(image), np.array([0, 0, 0], dtype=np.uint8), np.array([200, 255, 255], dtype=np.uint8))
+        # cv2.imshow("white mask", white_mask)
+        # yellow_mask = isolate_color_mask(to_hls(image), np.array([10, 0, 100], dtype=np.uint8), np.array([40, 255, 255], dtype=np.uint8))
+        # cv2.imshow("yellow mask", yellow_mask)
+        # mask = cv2.bitwise_or(white_mask, yellow_mask)
+        # cv2.imshow("mask", mask)
+        
+        # colored_img = cv2.bitwise_and(darkened_img, darkened_img, mask=mask)
+        
+        # Apply Gaussian Blur
+        # blurred_img = gaussian_blur(colored_img, kernel_size=7)
+        
+        # Apply Canny edge filter
+        canny_img = canny(gray_img, low_threshold=70, high_threshold=140)
+        # cv2.imshow("canny_img", canny_img)
+        
+        # Get Area of Interest
+        aoi_img = get_aoi(canny_img)
+        
+        # Apply Hough lines
+        hough_lines = get_hough_lines(aoi_img)
+        # hough_img = draw_lines(original_img, hough_lines)
+        # cv2.imshow("hough_img", hough_img)
+
+        if hough_lines is None:
+            return None
+        
+        # Extrapolation and averaging
+        left_lane, right_lane = get_lane_lines(original_img, hough_lines)
+
+        # self.calculate_world_cords(np.array(left_lane+right_lane).T[::-1])
+        # Convert to wold frame
+        if left_lane is not None:
+            self.left_lane = self.calculate_world_cords(np.array(left_lane).T[::-1])
+        if right_lane is not None:
+            self.right_lane = self.calculate_world_cords(np.array(right_lane).T[::-1])
+        
+        self.lane_center = (self.left_lane + self.right_lane) / 2
+        #car_center = self.agent.vehicle.transform.get_matrix()@np.r_[0,self.agent.vehicle.wheel_base/2,0,1]
+        dist_to_lane_center = dist_to_line_2d(np.array([self.agent.vehicle.transform.location.x,self.agent.vehicle.transform.location.z]), self.lane_center[0,[0,2]], self.lane_center[1,[0,2]])
+        
+        if visualize:
+            processed_img = draw_weighted_lines(original_img, [left_lane, right_lane], thickness= 10)
+            if left_lane is not None:
+                for (x,y), coor_world in zip(left_lane, self.left_lane):
+                    processed_img = cv2.putText(processed_img, str(coor_world), (x-100,y-20), cv2.FONT_HERSHEY_SIMPLEX, 0.25, (255, 255, 255), 1, cv2.LINE_AA)
+            if right_lane is not None:
+                for (x,y), coor_world in zip(right_lane, self.right_lane):
+                    processed_img = cv2.putText(processed_img, str(coor_world), (x-100,y-30), cv2.FONT_HERSHEY_SIMPLEX, 0.25, (255, 255, 255), 1, cv2.LINE_AA)
+            if left_lane is not None and right_lane is not None:
+                center_x1 = (left_lane[0][0] + right_lane[0][0]) // 2
+                center_x2 = (left_lane[1][0] + right_lane[1][0]) // 2
+                center_y1 = (left_lane[0][1] + right_lane[0][1]) // 2
+                center_y2 = (left_lane[1][1] + right_lane[1][1]) // 2
+                lane_center = (center_x1, center_y1), (center_x2, center_y2)
+                processed_img = draw_weighted_lines(processed_img, [lane_center], thickness= 5, color=[0,255,0])
+                for (x,y), coor_world in zip(lane_center, self.lane_center):
+                    processed_img = cv2.putText(processed_img, str(coor_world), (x-100,y-40), cv2.FONT_HERSHEY_SIMPLEX, 0.25, (255, 255, 255), 1, cv2.LINE_AA)
+            processed_img = cv2.putText(processed_img, str(dist_to_lane_center), (0, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
+            processed_img = cv2.putText(processed_img, str((self.agent.vehicle.transform.location.x,self.agent.vehicle.transform.location.z)), (0, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
+            cv2.imshow("processed img", processed_img)
+
+        return dist_to_lane_center
+
     def calculate_world_cords(self, coords):
         depth_img = self.agent.front_depth_camera.data
+        # cv2.imshow('depth', np.minimum(depth_img,0.01)*100)
         raw_p2d = np.reshape(self._pix2xyz(depth_img=depth_img, i=coords[0], j=coords[1]), (3, np.shape(coords)[1])).T
 
         cords_y_minus_z_x = np.linalg.inv(self.agent.front_depth_camera.intrinsics_matrix) @ raw_p2d.T
         cords_xyz_1 = np.vstack([
             cords_y_minus_z_x[2, :],
-            cords_y_minus_z_x[0, :],
             -cords_y_minus_z_x[1, :],
+            cords_y_minus_z_x[0, :],
             np.ones((1, np.shape(cords_y_minus_z_x)[1]))
         ])
         points: np.ndarray = self.agent.vehicle.transform.get_matrix() @ self.agent.front_depth_camera.transform.get_matrix() @ cords_xyz_1

@@ -82,3 +82,7 @@ def img_to_world2(depth_img,
     # multiply by cam_world_matrix
     points = extrinsics_matrix @ cords_xyz_1  # i have all points now
     return points
+
+
+def dist_to_line_2d(p, a, b):
+    return np.cross(b-a,p-a)/np.linalg.norm(b-a)
