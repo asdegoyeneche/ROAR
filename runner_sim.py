@@ -17,6 +17,17 @@ def main():
     carla_runner = CarlaRunner(carla_settings=carla_config,
                                agent_settings=agent_config,
                                npc_agent_class=PurePursuitAgent)
+
+    # make csv file to store some data in
+    # we have current position x, y, z, current velocity x, y, z, next waypoint position x, y, z,
+    # next waypoint direction relative to the current position of the car x, y, z, steering, and throttle
+    csvNotes = "{}\n{}\n".format("we have current car position x, y, z, current car velocity x, y, z, next waypoint position x, y, z,", 
+                               "next waypoint direction relative to the current position of the car x, y, z, steering, and throttle")
+    csvHeader = "px, py, pz, vx, vy, vz, wpx, wpy, wpz, wvx, wvy, wvz, steering, throttle\n"
+    with open("C:/Users/chpmk/Documents/pid_data.csv", "w") as f:
+        f.write(csvNotes)
+        f.write(csvHeader)
+
     try:
         my_vehicle = carla_runner.set_carla_world()
         agent = PIDAgent(vehicle=my_vehicle, agent_settings=agent_config)

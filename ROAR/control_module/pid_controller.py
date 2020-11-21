@@ -31,14 +31,35 @@ class PIDController(Controller):
             steering_boundary=steering_boundary
         )
         self.logger = logging.getLogger(__name__)
+        #self.num_steps = 0
 
     def run_in_series(self, next_waypoint: Transform, **kwargs) -> VehicleControl:
-        steering, errBoi = self.lat_pid_controller.run_in_series(next_waypoint=next_waypoint)
+        steering, errBoi, posBoi, velBoi, way_dir = self.lat_pid_controller.run_in_series(next_waypoint=next_waypoint)
 
         # feed the error into the longitudinal controller order to slow down when off target
         throttle = self.long_pid_controller.run_in_series(next_waypoint=next_waypoint,
                                                           target_speed=kwargs.get("target_speed", self.max_speed),
                                                           errBoi=np.abs(errBoi))
+
+        '''
+        # return zero controls every fifth step to see if that does anything
+        if self.num_steps % 10 < 3:
+            steering = 0
+            throttle = 0
+        self.num_steps += 1
+        '''
+
+        # we have current position x, y, z, current velocity x, y, z, next waypoint position x, y, z,
+        # next waypoint direction relative to the current position of the car x, y, z, steering, and throttle 
+        dataLine = "{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}\n".format(
+                        posBoi.x, posBoi.y, posBoi.z,
+                        velBoi[0], velBoi[1], velBoi[2],
+                        next_waypoint.location.x, next_waypoint.location.y, next_waypoint.location.z,
+                        way_dir[0], way_dir[1], way_dir[2],
+                        steering,
+                        throttle)
+        with open("C:/Users/chpmk/Documents/pid_data.csv", "a") as f:
+            f.write(dataLine)
 
         return VehicleControl(throttle=throttle, steering=steering)
 
@@ -150,4 +171,4 @@ class LatPIDController(Controller):
         lat_control = float(
             np.clip((k_p * _dot) + (k_d * _de) + (k_i * _ie), self.steering_boundary[0], self.steering_boundary[1])
         )
-        return lat_control, _dot
+        return lat_control, _dot, v_begin, v_vec, w_vec
