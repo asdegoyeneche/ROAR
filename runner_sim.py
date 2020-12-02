@@ -10,6 +10,7 @@ from ROAR.configurations.configuration import Configuration as AgentConfig
 from ROAR.agent_module.special_agents.waypoint_generating_agent import WaypointGeneratigAgent
 from ROAR.agent_module.pid_agent import PIDAgent
 
+
 def main():
     agent_config = AgentConfig.parse_file(Path("./ROAR_Sim/configurations/agent_configuration.json"))
     carla_config = CarlaConfig.parse_file(Path("./ROAR_Sim/configurations/configuration.json"))
@@ -39,8 +40,8 @@ def main():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(format='%(asctime)s - %(name)s '
-                               '- %(levelname)s - %(message)s',
+    logging.basicConfig(format='%(levelname)s - %(asctime)s - %(name)s '
+                               '- %(message)s',
                         level=logging.DEBUG)
     logging.getLogger("matplotlib").setLevel(logging.WARNING)
     warnings.simplefilter("ignore")

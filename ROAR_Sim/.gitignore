@@ -1,8 +1,0 @@
-*/__pycache__/
-*__pycache__
-.idea
-.vscode
-site
-.ipynb_checkpoints
-*__pycache__*
-/configurations/jetson_sudo_setup.json
