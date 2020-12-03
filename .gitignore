@@ -131,6 +131,9 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# SVN stuff
+.svn
+
 .idea
 __pycache__
 LinuxNoEditor
