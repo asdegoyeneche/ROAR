@@ -62,10 +62,11 @@ class LQRController(Controller):
         # Generate our target speed with speed reduction when off track
         target_speed = min(self.max_speed, kwargs.get("target_speed", self.max_speed))
         # if we are very off track, update error to reflect that
-        if angBoi > self.errBoi:
-            self.errBoi = angBoi
+        absErr = np.abs(angBoi)
+        if absErr > self.errBoi:
+            self.errBoi = absErr
         else: # if we are getting back on track, gradually reduce our error 
-            self.errBoi = self.errBoi*(1-self.errAlpha) + angBoi*self.errAlpha
+            self.errBoi = self.errBoi*(1-self.errAlpha) + absErr*self.errAlpha
         # reduce our target speed based on how far off target we are
         target_speed *= (math.exp(-self.errBoi) - 1)/2 + 1
         
