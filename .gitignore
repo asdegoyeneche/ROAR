@@ -131,6 +131,9 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# SVN stuff
+.svn
+
 .idea
 __pycache__
 LinuxNoEditor
@@ -139,3 +142,4 @@ WindowsNoEditor
 data
 output
 tmp
+archive
