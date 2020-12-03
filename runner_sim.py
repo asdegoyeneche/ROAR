@@ -20,7 +20,7 @@ def main():
                                agent_settings=agent_config,
                                npc_agent_class=PurePursuitAgent)
 
-	''' Data collection code. Currently unnecessary
+    ''' Data collection code. Currently unnecessary
     # make csv file to store some data in
     # we have current position x, y, z, current velocity x, y, z, next waypoint position x, y, z,
     # next waypoint direction relative to the current position of the car x, y, z, steering, and throttle
@@ -30,7 +30,7 @@ def main():
     with open("tmp/pid_data.csv", "w") as f:
         f.write(csvNotes)
         f.write(csvHeader)
-	'''
+    '''
 
     try:
         my_vehicle = carla_runner.set_carla_world()
