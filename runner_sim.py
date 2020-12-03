@@ -8,7 +8,8 @@ from ROAR.agent_module.pure_pursuit_agent import PurePursuitAgent
 # from ROAR.agent_module.point_cloud_agent import PointCloudAgent
 from ROAR.configurations.configuration import Configuration as AgentConfig
 from ROAR.agent_module.special_agents.waypoint_generating_agent import WaypointGeneratigAgent
-from ROAR.agent_module.pid_agent import PIDAgent
+#from ROAR.agent_module.pid_agent import PIDAgent
+from ROAR.agent_module.lqr_agent import LQRAgent
 
 
 def main():
@@ -19,6 +20,7 @@ def main():
                                agent_settings=agent_config,
                                npc_agent_class=PurePursuitAgent)
 
+	''' Data collection code. Currently unnecessary
     # make csv file to store some data in
     # we have current position x, y, z, current velocity x, y, z, next waypoint position x, y, z,
     # next waypoint direction relative to the current position of the car x, y, z, steering, and throttle
@@ -28,10 +30,12 @@ def main():
     with open("C:/Users/chpmk/Documents/pid_data.csv", "w") as f:
         f.write(csvNotes)
         f.write(csvHeader)
+	'''
 
     try:
         my_vehicle = carla_runner.set_carla_world()
-        agent = PIDAgent(vehicle=my_vehicle, agent_settings=agent_config)
+        #agent = PIDAgent(vehicle=my_vehicle, agent_settings=agent_config)
+        agent = LQRAgent(vehicle=my_vehicle, agent_settings=agent_config)
         carla_runner.start_game_loop(agent=agent, use_manual_control=False)
     except Exception as e:
         logging.error(f"Something bad happened during initialization: {e}")

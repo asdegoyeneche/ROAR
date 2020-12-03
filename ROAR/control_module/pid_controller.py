@@ -72,6 +72,8 @@ class PIDController(Controller):
             if current_speed < speed_upper_bound:
                 k_p, k_d, k_i = kvalues["Kp"], kvalues["Kd"], kvalues["Ki"]
                 break
+        # this clips the K values to be at most 1, so setting any K values larger than 
+        # that does absolutely nothing lmao
         return np.clip([k_p, k_d, k_i], a_min=0, a_max=1)
 
 
