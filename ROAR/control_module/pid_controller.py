@@ -58,7 +58,7 @@ class PIDController(Controller):
                         way_dir[0], way_dir[1], way_dir[2],
                         steering,
                         throttle)
-        with open("C:/Users/chpmk/Documents/pid_data.csv", "a") as f:
+        with open("tmp/pid_data.csv", "a") as f:
             f.write(dataLine)
 
         return VehicleControl(throttle=throttle, steering=steering)
