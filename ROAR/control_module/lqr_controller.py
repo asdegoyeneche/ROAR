@@ -29,11 +29,11 @@ class LQRController(Controller):
         self.Q = np.array(self.config['Q'])
         self.R = np.array(self.config['R'])
         # calculate our feedback matrix
-        self.P, self.K = _dlqr(self.A,
-        					   self.B,
-        					   self.Q,
-        					   self.R)
-        					   
+        self.P, self.K = self._dlqr(self.A,
+                                    self.B,
+                                    self.Q,
+                                    self.R)
+                               
         # some adaptive speed stuff
         self.errBoi = 0
         self.errAlpha = self.config['errAlpha']
@@ -41,26 +41,26 @@ class LQRController(Controller):
         self.logger = logging.getLogger(__name__)
         #self.num_steps = 0
 
-	# solves the infinite-horizon discrete-time lqr 
-	def _dlqr(self, A, B, Q, R):
-		# solve the ricatti equation for P
-		P = dare(A, B, Q, R)
-		
-		# K = (B.T P B + R)^-1 (B.T P A)
-		K = np.linalg.multi_dot([np.linalg.inv(np.linalg.multi_dot([B.T, P, B]) + R), B.T, P, A])
-		
-		return P, K
+    # solves the infinite-horizon discrete-time lqr 
+    def _dlqr(self, A, B, Q, R):
+        # solve the ricatti equation for P
+        P = dare(A, B, Q, R)
+        
+        # K = (B.T P B + R)^-1 (B.T P A)
+        K = np.linalg.multi_dot([np.linalg.inv(np.linalg.multi_dot([B.T, P, B]) + R), B.T, P, A])
+        
+        return P, K
 
     def run_in_series(self, next_waypoint: Transform, **kwargs) -> VehicleControl:
-    	# Calculate the current angle to the next waypoint
-    	angBoi = self._calculate_angle_error(next_waypoint=next_waypoint)
-    	# Grab our current speed
-    	curSpeed = Vehicle.get_speed(self.agent.vehicle)
-    	# Toss both values into a current xt
-    	xt = np.array([angBoi, curSpeed])
-    	
-    	# Generate our target speed with speed reduction when off track
-    	target_speed = min(self.max_speed, kwargs.get("target_speed", self.max_speed))
+        # Calculate the current angle to the next waypoint
+        angBoi = -self._calculate_angle_error(next_waypoint=next_waypoint)
+        # Grab our current speed
+        curSpeed = Vehicle.get_speed(self.agent.vehicle)
+        # Toss both values into a current xt
+        xt = np.array([angBoi, curSpeed])
+        
+        # Generate our target speed with speed reduction when off track
+        target_speed = min(self.max_speed, kwargs.get("target_speed", self.max_speed))
         # if we are very off track, update error to reflect that
         if angBoi > self.errBoi:
             self.errBoi = angBoi
@@ -68,28 +68,28 @@ class LQRController(Controller):
             self.errBoi = self.errBoi*(1-self.errAlpha) + angBoi*self.errAlpha
         # reduce our target speed based on how far off target we are
         target_speed *= (math.exp(-self.errBoi) - 1)/2 + 1
-    	
-    	## Note for future: It may be helpful to have another module for adaptive speed control and some way to slowly
-    	## increase the target speed when we can.
-    	
-    	# Assume we want to go in the direction of the waypoint at the target speed foreversies
-    	xd = np.array([0, target_speed])
-    	# Calculate the feasible ud trajectory
-    	ud,_,_,_ = np.linalg.lstsq(self.B, xd-np.dot(self.A, xd), rcond=None)
-    	
-    	# convert to offset variables zt and ht
-    	zt = xt - xd
-    	ht = -np.dot(self.K, zt)
-    	# convert back to ut and clip our inputs
-    	ut = ht + ud
-    	steering = np.clip(ut[0], self.steering_boundary[0], self.steering_boundary[1])
-    	throttle = np.clip(ut[1], self.throttle_boundary[0], self.throttle_boundary[1])
-    	
-    	return VehicleControl(steering=steering, throttle=throttle)
-    	
-	# code stolen from the PID controller to calculate the angle
-	def _calculate_angle_error(self, next_waypoint: Transform):
-	    # calculate a vector that represent where you are going
+        
+        ## Note for future: It may be helpful to have another module for adaptive speed control and some way to slowly
+        ## increase the target speed when we can.
+        
+        # Assume we want to go in the direction of the waypoint at the target speed foreversies
+        xd = np.array([0, target_speed])
+        # Calculate the feasible ud trajectory
+        ud,_,_,_ = np.linalg.lstsq(self.B, xd-np.dot(self.A, xd), rcond=None)
+        
+        # convert to offset variables zt and ht
+        zt = xt - xd
+        ht = -np.dot(self.K, zt)
+        # convert back to ut and clip our inputs
+        ut = ht + ud
+        steering = np.clip(ut[0], self.steering_boundary[0], self.steering_boundary[1])
+        throttle = np.clip(ut[1], self.throttle_boundary[0], self.throttle_boundary[1])
+        
+        return VehicleControl(steering=steering, throttle=throttle)
+        
+    # code stolen from the PID controller to calculate the angle
+    def _calculate_angle_error(self, next_waypoint: Transform):
+        # calculate a vector that represent where you are going
         v_begin = self.agent.vehicle.transform.location
         v_end = v_begin + Location(
             x=math.cos(math.radians(self.agent.vehicle.transform.rotation.pitch)),
