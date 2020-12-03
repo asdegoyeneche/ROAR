@@ -27,7 +27,7 @@ def main():
     csvNotes = "{}\n{}\n".format("we have current car position x, y, z, current car velocity x, y, z, next waypoint position x, y, z,", 
                                "next waypoint direction relative to the current position of the car x, y, z, steering, and throttle")
     csvHeader = "px, py, pz, vx, vy, vz, wpx, wpy, wpz, wvx, wvy, wvz, steering, throttle\n"
-    with open("C:/Users/chpmk/Documents/pid_data.csv", "w") as f:
+    with open("tmp/pid_data.csv", "w") as f:
         f.write(csvNotes)
         f.write(csvHeader)
 	'''
