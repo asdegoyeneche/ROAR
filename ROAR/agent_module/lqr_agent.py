@@ -3,8 +3,10 @@ from ROAR.agent_module.agent import Agent
 from pathlib import Path
 #from ROAR.control_module.pid_controller import PIDController
 from ROAR.control_module.lqr_controller import LQRController
-from ROAR.planning_module.local_planner.simple_waypoint_following_local_planner import \
-    SimpleWaypointFollowingLocalPlanner
+# from ROAR.planning_module.local_planner.simple_waypoint_following_local_planner import \
+#     SimpleWaypointFollowingLocalPlanner
+from ROAR.planning_module.local_planner.smooth_waypoint_following_local_planner import \
+    SmoothWaypointFollowingLocalPlanner
 from ROAR.planning_module.behavior_planner.behavior_planner import BehaviorPlanner
 from ROAR.planning_module.mission_planner.waypoint_following_mission_planner import WaypointFollowingMissionPlanner
 from ROAR.utilities_module.data_structures_models import SensorsData
@@ -23,7 +25,7 @@ class LQRAgent(Agent):
         # initiated right after mission plan
 
         self.behavior_planner = BehaviorPlanner(agent=self)
-        self.local_planner = SimpleWaypointFollowingLocalPlanner(
+        self.local_planner = SmoothWaypointFollowingLocalPlanner(
             agent=self,
             controller=self.lqr_controller,
             mission_planner=self.mission_planner,

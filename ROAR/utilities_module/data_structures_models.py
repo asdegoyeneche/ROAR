@@ -36,6 +36,9 @@ class Location(BaseModel):
     def __str__(self):
         return f"x: {self.x:.3}, y: {self.y:.3}, z: {self.z:.3}"
 
+    def __truediv__(self, scalar):
+        return Location(x=self.x / scalar, y=self.y / scalar, z=self.z / scalar)
+
     def to_array(self) -> np.array:
         return np.array([self.x, self.y, self.z])
 
@@ -50,6 +53,13 @@ class Rotation(BaseModel):
 
     def to_array(self) -> np.array:
         return np.array([self.pitch, self.yaw, self.roll])
+
+    def __add__(self, other):
+        """"""
+        return Rotation(pitch=self.pitch + other.pitch, yaw=self.yaw + other.yaw, roll=self.roll + other.roll)
+
+    def __truediv__(self, scalar):
+        return Rotation(pitch=self.pitch / scalar, yaw=self.yaw / scalar, roll=self.roll / scalar)
 
 
 class Transform(BaseModel):
