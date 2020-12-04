@@ -19,7 +19,6 @@
     [0.0, 2.5]
   ],
   
-  "angAlpha": 1,
   "errAlpha": 0.2,
   "slowdown": 0.5,
   "maxSlow": 0.5

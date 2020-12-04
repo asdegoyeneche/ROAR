@@ -60,14 +60,10 @@ class LQRController(Controller):
     def run_in_series(self, next_waypoint: Transform, **kwargs) -> VehicleControl:
         # Calculate the current angle to the next waypoint
         angBoi = -self._calculate_angle_error(next_waypoint=next_waypoint)
-        if np.abs(angBoi) > np.abs(self.angBoi):
-            self.angBoi = angBoi
-        else:
-            self.angBoi = self.angBoi*(1-self.angAlpha) + angBoi*self.angAlpha
         # Grab our current speed
         curSpeed = Vehicle.get_speed(self.agent.vehicle)
         # Toss both values into a current xt
-        xt = np.array([self.angBoi, curSpeed])
+        xt = np.array([angBoi, curSpeed])
         
         # Generate our target speed with speed reduction when off track
         target_speed = min(self.max_speed, kwargs.get("target_speed", self.max_speed))
