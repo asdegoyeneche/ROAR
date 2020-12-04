@@ -34,9 +34,15 @@ class LQRController(Controller):
                                     self.Q,
                                     self.R)
                                
+        # some waypoint smoothing stuff
+        self.angBoi = 0
+        self.angAlpha = self.config['angAlpha']
+
         # some adaptive speed stuff
         self.errBoi = 0
         self.errAlpha = self.config['errAlpha']
+        self.slowdown = self.config['slowdown']
+        self.maxSlow = self.config['maxSlow']
 
         self.logger = logging.getLogger(__name__)
         #self.num_steps = 0
@@ -54,10 +60,14 @@ class LQRController(Controller):
     def run_in_series(self, next_waypoint: Transform, **kwargs) -> VehicleControl:
         # Calculate the current angle to the next waypoint
         angBoi = -self._calculate_angle_error(next_waypoint=next_waypoint)
+        if np.abs(angBoi) > np.abs(self.angBoi):
+            self.angBoi = angBoi
+        else:
+            self.angBoi = self.angBoi*(1-self.angAlpha) + angBoi*self.angAlpha
         # Grab our current speed
         curSpeed = Vehicle.get_speed(self.agent.vehicle)
         # Toss both values into a current xt
-        xt = np.array([angBoi, curSpeed])
+        xt = np.array([self.angBoi, curSpeed])
         
         # Generate our target speed with speed reduction when off track
         target_speed = min(self.max_speed, kwargs.get("target_speed", self.max_speed))
@@ -68,8 +78,9 @@ class LQRController(Controller):
         else: # if we are getting back on track, gradually reduce our error 
             self.errBoi = self.errBoi*(1-self.errAlpha) + absErr*self.errAlpha
         # reduce our target speed based on how far off target we are
-        target_speed *= (math.exp(-self.errBoi) - 1)/2 + 1
-        
+        #target_speed *= (math.exp(-self.errBoi) - 1)*self.slowdown + 1
+        target_speed *= max((math.cos(self.errBoi) - 1)*self.slowdown, -self.maxSlow) + 1
+
         ## Note for future: It may be helpful to have another module for adaptive speed control and some way to slowly
         ## increase the target speed when we can.
         
