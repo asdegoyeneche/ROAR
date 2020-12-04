@@ -57,7 +57,7 @@ class LQRController(Controller):
         
         return P, K
 
-    def run_in_series(self, next_waypoint: Transform, **kwargs) -> VehicleControl:
+    def run_in_series(self, next_waypoint: Transform, speed_multiplier=1.0, **kwargs) -> VehicleControl:
         # Calculate the current angle to the next waypoint
         angBoi = -self._calculate_angle_error(next_waypoint=next_waypoint)
         # Grab our current speed
@@ -66,7 +66,8 @@ class LQRController(Controller):
         xt = np.array([angBoi, curSpeed])
         
         # Generate our target speed with speed reduction when off track
-        target_speed = min(self.max_speed, kwargs.get("target_speed", self.max_speed))
+        # target_speed = min(self.max_speed, kwargs.get("target_speed", self.max_speed))
+        target_speed = self.max_speed * speed_multiplier
         # if we are very off track, update error to reflect that
         absErr = np.abs(angBoi)
         if absErr > self.errBoi:
@@ -74,8 +75,8 @@ class LQRController(Controller):
         else: # if we are getting back on track, gradually reduce our error 
             self.errBoi = self.errBoi*(1-self.errAlpha) + absErr*self.errAlpha
         # reduce our target speed based on how far off target we are
-        #target_speed *= (math.exp(-self.errBoi) - 1)*self.slowdown + 1
-        target_speed *= max((math.cos(self.errBoi) - 1)*self.slowdown, -self.maxSlow) + 1
+        # target_speed *= (math.exp(-self.errBoi) - 1)*self.slowdown + 1
+        target_speed *= max((math.cos(self.errBoi) - 1) * self.slowdown, -self.maxSlow) + 1
 
         ## Note for future: It may be helpful to have another module for adaptive speed control and some way to slowly
         ## increase the target speed when we can.
