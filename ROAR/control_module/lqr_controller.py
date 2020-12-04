@@ -108,13 +108,16 @@ class LQRController(Controller):
             y=v_begin.y,
             z=math.sin(math.radians(self.agent.vehicle.transform.rotation.pitch)),
         )
-        v_vec = np.array([v_end.x - v_begin.x, v_end.y - v_begin.y, v_end.z - v_begin.z])
+        # we ignore the vertical/altitude component, which is y, and only consider horizontal angle for
+        # steering control
+        v_vec = np.array([v_end.x - v_begin.x, 0, v_end.z - v_begin.z])
+        #v_vec = np.array([v_end.x - v_begin.x, v_end.y - v_begin.y, v_end.z - v_begin.z])
 
         # calculate error projection
         w_vec = np.array(
             [
                 next_waypoint.location.x - v_begin.x,
-                next_waypoint.location.y - v_begin.y,
+                0, #next_waypoint.location.y - v_begin.y, # again, ignoring vertical component
                 next_waypoint.location.z - v_begin.z,
             ]
         )
