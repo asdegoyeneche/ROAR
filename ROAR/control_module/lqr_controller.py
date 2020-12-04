@@ -36,7 +36,7 @@ class LQRController(Controller):
                                
         # some waypoint smoothing stuff
         self.angBoi = 0
-        self.angAlpha = self.config['angAlpha']
+        # self.angAlpha = self.config['angAlpha']
 
         # some adaptive speed stuff
         self.errBoi = 0

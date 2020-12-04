@@ -110,8 +110,8 @@ def get_aoi(img):
     rows, cols = img.shape[:2]
     mask = np.zeros_like(img)
     
-    left_bottom = [cols * 0.1, rows]
-    right_bottom = [cols * 0.95, rows]
+    left_bottom = [cols * -0.1, rows]
+    right_bottom = [cols * 1.1, rows]
     left_top = [cols * 0.4, rows * 0.6]
     right_top = [cols * 0.6, rows * 0.6]
     
@@ -196,6 +196,11 @@ def get_lane_lines(img, lines):
     
     left_lane = convert_slope_intercept_to_line(y1, y2, left_avg, img.shape[1]-1)
     right_lane = convert_slope_intercept_to_line(y1, y2, right_avg, img.shape[1]-1)
+
+    # Lanes are two close meaning that only one lane is detected
+    if left_lane is not None and right_lane is not None and abs(left_lane[0][0]-right_lane[0][0])<img.shape[1]/2:
+        return None, None
+
     return left_lane, right_lane
 
 def draw_weighted_lines(img, lines, color=[255, 0, 0], thickness=2, alpha = 1.0, beta = 0.95, gamma= 0):
@@ -218,6 +223,8 @@ class LaneDetector(Detector):
     def run_in_series(self, **kwargs) -> Any:
         rgb_img = self.agent.front_rgb_camera.data
         self.dist_to_lane_center = self.process_image(rgb_img, visualize=False)
+        if self.dist_to_lane_center is None:
+            self.lane_center = None
         return self.dist_to_lane_center
 
     def run_in_threaded(self, **kwargs):
@@ -232,6 +239,9 @@ class LaneDetector(Detector):
 
         original_img = np.copy(image)
         # cv2.imshow("original img", original_img)
+
+        if visualize:
+            original_aoi_img = get_aoi(original_img)
         
         # convert to grayscale
         gray_img = grayscale(image)
@@ -271,6 +281,9 @@ class LaneDetector(Detector):
         # Extrapolation and averaging
         left_lane, right_lane = get_lane_lines(original_img, hough_lines)
 
+        if left_lane is None or right_lane is None:
+            return None
+
         # self.calculate_world_cords(np.array(left_lane+right_lane).T[::-1])
         # Convert to wold frame
         if left_lane is not None:
@@ -283,7 +296,7 @@ class LaneDetector(Detector):
         dist_to_lane_center = dist_to_line_2d(np.array([self.agent.vehicle.transform.location.x,self.agent.vehicle.transform.location.z]), self.lane_center[0,[0,2]], self.lane_center[1,[0,2]])
         
         if visualize:
-            processed_img = draw_weighted_lines(original_img, [left_lane, right_lane], thickness= 10)
+            processed_img = draw_weighted_lines(original_aoi_img, [left_lane, right_lane], thickness= 10)
             if left_lane is not None:
                 for (x,y), coor_world in zip(left_lane, self.left_lane):
                     processed_img = cv2.putText(processed_img, str(coor_world), (x-100,y-20), cv2.FONT_HERSHEY_SIMPLEX, 0.25, (255, 255, 255), 1, cv2.LINE_AA)

@@ -42,6 +42,10 @@ class Location(BaseModel):
     def to_array(self) -> np.array:
         return np.array([self.x, self.y, self.z])
 
+    @staticmethod
+    def from_array(array):
+        return Location(x=array[0], y=array[1], z=array[2])
+
 
 class Rotation(BaseModel):
     pitch: float = Field(..., title="Pitch", description="Degree around the Y-axis")
@@ -53,6 +57,10 @@ class Rotation(BaseModel):
 
     def to_array(self) -> np.array:
         return np.array([self.pitch, self.yaw, self.roll])
+    
+    @staticmethod
+    def from_array(array):
+        return Rotation(pitch=array[0], yaw=array[1], roll=array[2])
 
     def __add__(self, other):
         """"""
@@ -60,6 +68,11 @@ class Rotation(BaseModel):
 
     def __truediv__(self, scalar):
         return Rotation(pitch=self.pitch / scalar, yaw=self.yaw / scalar, roll=self.roll / scalar)
+
+    def __rmul__(self, scalar):
+        return Rotation(pitch=self.pitch * scalar, yaw=self.yaw * scalar, roll=self.roll * scalar)
+    
+    __mul__ = __rmul__
 
 
 class Transform(BaseModel):
@@ -105,6 +118,23 @@ class Transform(BaseModel):
     def record(self):
         return f"{self.location.x},{self.location.y},{self.location.z},{self.rotation.roll},{self.rotation.pitch},{self.rotation.yaw}"
 
+    def to_array(self):
+        return np.concatenate((self.location.to_array(), self.rotation.to_array()))
+
+    @staticmethod
+    def from_array(array):
+        return Transform(location=Location.from_array(array[:3]), rotation=Rotation.from_array(array[3:]))
+    
+    def __add__(self, other):
+        return Transform.from_array(self.to_array() + other.to_array())
+
+    def __truediv__(self, scalar):
+        return Transform.from_array(self.to_array() / scalar)
+
+    def __rmul__(self, scalar):
+        return Transform.from_array(self.to_array() * scalar)
+
+    __mul__ = __rmul__
 
 class Vector3D(BaseModel):
     x: float = Field(default=0)
