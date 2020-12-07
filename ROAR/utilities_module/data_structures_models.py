@@ -45,6 +45,11 @@ class Location(BaseModel):
     @staticmethod
     def from_array(array):
         return Location(x=array[0], y=array[1], z=array[2])
+    
+    def __rmul__(self, scalar):
+        return Location.from_array(self.to_array() * scalar)
+
+    __mul__ = __rmul__
 
 
 class Rotation(BaseModel):

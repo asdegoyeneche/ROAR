@@ -1,6 +1,6 @@
 {
   "front_depth_cam": {
-    "fov": 70,
+    "fov": 60,
     "transform": {
       "location": {
         "x": 1.6,
@@ -17,7 +17,7 @@
     "image_size_y": 600
   },
   "front_rgb_cam": {
-    "fov": 70,
+    "fov": 60,
     "transform": {
       "location": {
         "x": 1.6,

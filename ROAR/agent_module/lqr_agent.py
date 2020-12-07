@@ -1,3 +1,4 @@
+from ROAR.planning_module.local_planner.lane_following_local_planner import LaneFollowingLocalPlanner
 from ROAR.perception_module.lane_detector import LaneDetector
 from ROAR.agent_module.agent import Agent
 from pathlib import Path
@@ -25,7 +26,7 @@ class LQRAgent(Agent):
         # initiated right after mission plan
 
         self.behavior_planner = BehaviorPlanner(agent=self)
-        self.local_planner = SmoothWaypointFollowingLocalPlanner(
+        self.local_planner = LaneFollowingLocalPlanner(
         #self.local_planner = SimpleWaypointFollowingLocalPlanner(
             agent=self,
             controller=self.lqr_controller,

@@ -88,10 +88,10 @@ def img_to_world2(depth_img,
 def dist_to_line_2d(p, a, b):
     return np.cross(b-a,p-a)/np.linalg.norm(b-a)
 
-def two_points_to_yaw_pitch(a, b):
+def two_points_to_pitch(a, b):
     dx = b[0] - a[0]
     dy = b[1] - a[1]
     dz = b[2] - a[2]
-    yaw = math.atan2(dz, dx)
-    pitch = math.atan2(math.sqrt(dz ** 2 + dx ** 2), dy) + math.pi
-    return yaw, pitch
+    pitch = math.atan2(dz, dx)
+    #pitch = math.atan2(math.sqrt(dz ** 2 + dx ** 2), dy)
+    return pitch
