@@ -24,7 +24,7 @@ pip-wheel-metadata/
 share/python-wheels/
 *.egg-info/
 .installed.cfg
-*.egg
+#*.egg
 MANIFEST
 
 # PyInstaller
@@ -139,7 +139,7 @@ __pycache__
 LinuxNoEditor
 WindowsNoEditor
 
-data
+#data
 output
 tmp
 archive
