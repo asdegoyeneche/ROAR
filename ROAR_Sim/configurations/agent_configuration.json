@@ -16,6 +16,40 @@
     "image_size_x": 800,
     "image_size_y": 600
   },
+  "left_depth_cam": {
+    "fov": 70,
+    "transform": {
+      "location": {
+        "x": 1.6,
+        "y": 0.0,
+        "z": 1.1
+      },
+      "rotation": {
+        "pitch": 0.0,
+        "yaw": 0.0,
+        "roll": 0.0
+      }
+    },
+    "image_size_x": 800,
+    "image_size_y": 600
+  },
+  "right_depth_cam": {
+    "fov": 70,
+    "transform": {
+      "location": {
+        "x": 1.6,
+        "y": 0.0,
+        "z": 2.3
+      },
+      "rotation": {
+        "pitch": 0.0,
+        "yaw": 0.0,
+        "roll": 0.0
+      }
+    },
+    "image_size_x": 800,
+    "image_size_y": 600
+  },
   "front_rgb_cam": {
     "fov": 60,
     "transform": {

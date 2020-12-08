@@ -34,9 +34,9 @@ class LQRAgent(Agent):
             behavior_planner=self.behavior_planner,
             closeness_threshold=1)
         self.lane_detector = LaneDetector(agent=self)
-        self.front_rgb_camera = agent_settings.front_rgb_cam
-        self.left_depth_camera = agent_settings.left_depth_cam 
-        self.right_depth_camera = agent_settings.right_depth_cam 
+        self.front_rgb_camera = self.agent_settings.front_rgb_cam
+        self.left_depth_camera = self.agent_settings.left_depth_cam
+        self.right_depth_camera = self.agent_settings.right_depth_cam
         self.logger.debug(
             f"Waypoint Following Agent Initiated. Reading f"
             f"rom {self.route_file_path.as_posix()}")

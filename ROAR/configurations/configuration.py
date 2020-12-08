@@ -23,6 +23,34 @@ class Configuration(BaseModel):
                                                    image_size_x=800,
                                                    image_size_y=600),
                                     title="Front Depth Camera")
+    left_depth_cam: Camera = Field(default=Camera(fov=70,
+                                                   transform=Transform(
+                                                       location=Location(x=1.6,
+                                                                         y=0,
+                                                                         z=1.1
+                                                                         ),
+                                                       rotation=Rotation(
+                                                           pitch=0,
+                                                           yaw=0,
+                                                           roll=0)),
+
+                                                   image_size_x=800,
+                                                   image_size_y=600),
+                                    title="Left Depth Camera")
+    right_depth_cam: Camera = Field(default=Camera(fov=70,
+                                                   transform=Transform(
+                                                       location=Location(x=1.6,
+                                                                         y=0,
+                                                                         z=2.3
+                                                                         ),
+                                                       rotation=Rotation(
+                                                           pitch=0,
+                                                           yaw=0,
+                                                           roll=0)),
+
+                                                   image_size_x=800,
+                                                   image_size_y=600),
+                                    title="Right Depth Camera")
     front_rgb_cam: Camera = Field(default=Camera(fov=70,
                                                  transform=Transform(
                                                      location=Location(x=1.6,
