@@ -1,5 +1,6 @@
 from ROAR.planning_module.local_planner.lane_following_local_planner import LaneFollowingLocalPlanner
 from ROAR.perception_module.lane_detector import LaneDetector
+from ROAR.perception_module.object_detector import ObjectDetector
 from ROAR.agent_module.agent import Agent
 from pathlib import Path
 #from ROAR.control_module.pid_controller import PIDController
@@ -37,6 +38,8 @@ class LQRAgent(Agent):
         self.front_rgb_camera = self.agent_settings.front_rgb_cam
         self.left_depth_camera = self.agent_settings.left_depth_cam
         self.right_depth_camera = self.agent_settings.right_depth_cam
+        self.left_obj_detector = ObjectDetector(agent=self, camera=self.left_depth_camera)
+        self.right_obj_detector = ObjectDetector(agent=self, camera=self.right_depth_camera)
         self.logger.debug(
             f"Waypoint Following Agent Initiated. Reading f"
             f"rom {self.route_file_path.as_posix()}")
@@ -47,6 +50,8 @@ class LQRAgent(Agent):
                                        sensors_data=sensors_data)
         self.transform_history.append(self.vehicle.transform)
         self.lane_detector.run_in_series()
+        self.left_obj_detector.run_in_series()
+        self.right_obj_detector.run_in_series()
         if self.local_planner.is_done():
             control = VehicleControl()
             self.logger.debug("Path Following Agent is Done. Idling.")
