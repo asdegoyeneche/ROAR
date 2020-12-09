@@ -114,6 +114,14 @@ class CarlaBridge(Bridge):
             front_depth=self.convert_depth_from_source_to_agent(
                 source=source.get("front_depth", None)
             ),
+            # begin custom depth sensors
+            left_depth=self.convert_depth_from_source_to_agent(
+                source=source.get("left_depth", None)
+            ),
+            right_depth=self.convert_depth_from_source_to_agent(
+                source=source.get("right_depth", None)
+            ),
+            # end custom depth sensors
             imu_data=self.convert_imu_from_source_to_agent(
                 source=source.get("imu", None)
             ),

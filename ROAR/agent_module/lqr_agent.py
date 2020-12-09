@@ -38,8 +38,11 @@ class LQRAgent(Agent):
         self.front_rgb_camera = self.agent_settings.front_rgb_cam
         self.left_depth_camera = self.agent_settings.left_depth_cam
         self.right_depth_camera = self.agent_settings.right_depth_cam
-        self.left_obj_detector = ObjectDetector(agent=self, camera=self.left_depth_camera)
-        self.right_obj_detector = ObjectDetector(agent=self, camera=self.right_depth_camera)
+        self.left_obj_detector = ObjectDetector(agent=self, camera=self.left_depth_camera, name="left")
+        self.right_obj_detector = ObjectDetector(agent=self, camera=self.right_depth_camera, name="right")
+
+        self.init_depth_cams()
+
         self.logger.debug(
             f"Waypoint Following Agent Initiated. Reading f"
             f"rom {self.route_file_path.as_posix()}")
@@ -58,3 +61,48 @@ class LQRAgent(Agent):
         else:
             control = self.local_planner.run_in_series()
         return control
+
+    def init_depth_cams(self) -> None:
+        """
+        Initialize the cameras by calculating the camera intrinsics and
+        ensuring that the output folder path exists
+
+        Returns:
+            None
+        """
+        if self.left_depth_camera is not None:
+            self.left_depth_camera.intrinsics_matrix = (
+                self.left_depth_camera.calculate_default_intrinsics_matrix()
+            )
+        if self.right_depth_camera is not None:
+            self.right_depth_camera.intrinsics_matrix = (
+                self.right_depth_camera.calculate_default_intrinsics_matrix()
+            )
+
+    def sync_data(self, sensors_data: SensorsData, vehicle: Vehicle) -> None:
+        """
+        Sync agent's state by updating Sensor Data and vehicle information
+
+        Args:
+            sensors_data: the new frame's sensor data
+            vehicle: the new frame's vehicle state
+
+        Returns:
+            None
+        """
+        super().sync_data(sensors_data, vehicle)
+
+        if self.left_depth_camera is not None:
+            self.left_depth_camera.data = (
+                sensors_data.left_depth.data
+                if sensors_data.left_depth is not None
+                else None
+            )
+
+        if self.right_depth_camera is not None:
+            self.right_depth_camera.data = (
+                sensors_data.right_depth.data
+                if sensors_data.right_depth is not None
+                else None
+            )
+

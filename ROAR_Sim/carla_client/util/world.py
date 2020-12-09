@@ -61,6 +61,11 @@ class World(object):
         self.rear_rgb_sensor = None
         self.semantic_segmentation_sensor = None
 
+        # begin custom depth sensors
+        self.left_depth_sensor = None
+        self.right_depth_sensor = None
+        # end custom depth sensors
+
         self.recording_start = 0
         # set weather
         self.logger.debug("Setting Weather")
@@ -90,6 +95,11 @@ class World(object):
         self.front_depth_sensor_data = None
         self.rear_rgb_sensor_data = None
         self.semantic_segmentation_sensor_data = None
+
+        # begin custom depth sensor data
+        self.left_depth_sensor_data = None
+        self.right_depth_sensor_data = None
+        # end custom depth sensor data
 
         # spawn npc
         self.npcs_mapping: Dict[str, Tuple[Any, AgentConfig]] = {}
@@ -216,6 +226,25 @@ class World(object):
                         self.agent_settings.rear_rgb_cam.fov,
                 })
 
+        # begin spawn custom depth sensors
+        self.left_depth_sensor = self._spawn_custom_sensor(
+            blueprint_filter="sensor.camera.depth",
+            transform=self.carla_bridge.convert_transform_from_agent_to_source(
+                self.agent_settings.left_depth_cam.transform),
+            attachment=Attachment.Rigid,
+            attributes={
+                "fov": self.agent_settings.left_depth_cam.fov,
+            })
+        self.right_depth_sensor = self._spawn_custom_sensor(
+            blueprint_filter="sensor.camera.depth",
+            transform=self.carla_bridge.convert_transform_from_agent_to_source(
+                self.agent_settings.right_depth_cam.transform),
+            attachment=Attachment.Rigid,
+            attributes={
+                "fov": self.agent_settings.right_depth_cam.fov,
+            })
+        # end spawn custom depth sensors
+
         if self.carla_settings.save_semantic_segmentation:
             self.semantic_segmentation_sensor = self._spawn_custom_sensor(
                 blueprint_filter="sensor.camera.semantic_segmentation",
@@ -236,6 +265,15 @@ class World(object):
         self.rear_rgb_sensor.listen(lambda image:
                                     World._parse_rear_rgb_sensor_image(
                                         weak_self=weak_self, image=image))
+        # begin setup custom depth sensors
+        self.left_depth_sensor.listen(
+            lambda image: World._parse_left_depth_sensor_image(
+                weak_self=weak_self, image=image))
+        self.right_depth_sensor.listen(
+            lambda image: World._parse_right_depth_sensor_image(
+                weak_self=weak_self, image=image))
+        # end setup custom depth sensors
+
         if self.carla_settings.save_semantic_segmentation:
             self.semantic_segmentation_sensor.listen(lambda image: World._parse_semantic_segmentation_image(
                 weak_self=weak_self, image=image
@@ -267,6 +305,14 @@ class World(object):
         if self.rear_rgb_sensor is not None:
             self.rear_rgb_sensor.destroy()
 
+        # begin custom depth sensors
+        if self.left_depth_sensor is not None:
+            self.left_depth_sensor.destroy()
+
+        if self.right_depth_sensor is not None:
+            self.right_depth_sensor.destroy()
+        # end custom depth sensors
+
         if self.semantic_segmentation_sensor is not None:
             self.semantic_segmentation_sensor.destroy()
 
@@ -284,6 +330,24 @@ class World(object):
             return
         # image.convert(cc.Raw)
         self.front_depth_sensor_data = image
+
+    # begin adding custom depth sensors
+    @staticmethod
+    def _parse_left_depth_sensor_image(weak_self, image):
+        self = weak_self()
+        if not self:
+            return
+        # image.convert(cc.Raw)
+        self.left_depth_sensor_data = image
+
+    @staticmethod
+    def _parse_right_depth_sensor_image(weak_self, image):
+        self = weak_self()
+        if not self:
+            return
+        # image.convert(cc.Raw)
+        self.right_depth_sensor_data = image
+    # end adding custom depth sensors
 
     @staticmethod
     def _parse_rear_rgb_sensor_image(weak_self, image):

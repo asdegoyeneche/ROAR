@@ -192,6 +192,8 @@ class SensorsData(BaseModel):
     front_rgb: Union[RGBData, None] = Field(default=None)
     rear_rgb: Union[RGBData, None] = Field(default=None)
     front_depth: Union[DepthData, None] = Field(default=None)
+    left_depth: Union[DepthData, None] = Field(default=None)
+    right_depth: Union[DepthData, None] = Field(default=None)
     imu_data: Union[IMUData, None] = Field(default=None)
     vive_tracker_data: Optional[ViveTrackerData] = Field(default=None)
 

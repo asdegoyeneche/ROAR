@@ -196,6 +196,14 @@ class CarlaRunner:
                     "front_depth":
                         None if self.world.front_depth_sensor_data is None else
                         self.world.front_depth_sensor_data,
+                    # begin custom depth sensors
+                    "left_depth":
+                        None if self.world.left_depth_sensor_data is None else
+                        self.world.left_depth_sensor_data,
+                    "right_depth":
+                        None if self.world.right_depth_sensor_data is None else
+                        self.world.right_depth_sensor_data,
+                    # end custom depth sensors
                     "imu": self.world.imu_sensor
                 }
             )

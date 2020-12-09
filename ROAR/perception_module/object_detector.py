@@ -16,9 +16,10 @@ from PIL import Image
 import os
 
 class ObjectDetector(Detector):
-    def __init__(self, agent: Agent, camera: Camera, **kwargs):
+    def __init__(self, agent: Agent, camera: Camera, name: str, **kwargs):
         super().__init__(agent, **kwargs)
         self.camera = camera
+        self.name = name
 
     def run_in_series(self, **kwargs) -> Any:
         depth_img = self.camera.data
@@ -28,12 +29,12 @@ class ObjectDetector(Detector):
         pass
 
     def process_image(self, image, visualize=False, **kwargs):
-        if image is None or len(image.shape) != 3:
+        if image is None:
             return None
 
         processed_img = np.copy(image)
 
         if visualize:
-            cv2.imshow("processed img", processed_img)
+            cv2.imshow(self.name + " depth img", processed_img)
             cv2.waitKey(1)
 
