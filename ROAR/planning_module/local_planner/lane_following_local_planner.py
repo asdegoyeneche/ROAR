@@ -43,10 +43,12 @@ class LaneFollowingLocalPlanner(SmoothWaypointFollowingLocalPlanner):
             return VehicleControl()
 
         # get vehicle's location
-        vehicle_transform: Union[Transform, None] = self.agent.vehicle.transform
+        vehicle_transform: Union[Transform,
+                                 None] = self.agent.vehicle.transform
 
         if vehicle_transform is None:
-            raise AgentException("I do not know where I am, I cannot proceed forward")
+            raise AgentException(
+                "I do not know where I am, I cannot proceed forward")
 
         # redefine closeness level based on speed
         self.set_closeness_threhold(self.closeness_threshold_config)
@@ -54,19 +56,22 @@ class LaneFollowingLocalPlanner(SmoothWaypointFollowingLocalPlanner):
         # get current lane center
         lane_detector: LaneDetector = self.agent.lane_detector
         lane_center = lane_detector.lane_center
-        next_location = Location.from_array(lane_center[0]*0+lane_center[1]*1) + vehicle_transform.location*0
+        next_location = Location.from_array(
+            lane_center[0]*0.2+lane_center[1]*0.8) + vehicle_transform.location*0
         # next_pitch = two_points_to_pitch(lane_center[0], lane_center[1])
-        # next_rotation = Rotation(yaw=vehicle_transform.rotation.yaw, 
-        #                          pitch=math.degrees(next_pitch), 
+        # next_rotation = Rotation(yaw=vehicle_transform.rotation.yaw,
+        #                          pitch=math.degrees(next_pitch),
         #                          roll=vehicle_transform.rotation.roll)
-        target_waypoint = Transform(location=next_location, rotation=vehicle_transform.rotation)
-        
+        target_waypoint_lane = Transform(
+            location=next_location, rotation=vehicle_transform.rotation)
+
         curr_closest_dist = float("inf")
         while True:
             if len(self.way_points_queue) == 0:
                 self.logger.info("Destination reached")
                 return VehicleControl()
             waypoint: Transform = self.way_points_queue[0]
+            waypoint, speed_factor = self.next_waypoint_smooth_and_speed()
             curr_dist = vehicle_transform.location.distance(waypoint.location)
             if curr_dist < curr_closest_dist:
                 # if i find a waypoint that is closer to me than before
@@ -77,9 +82,18 @@ class LaneFollowingLocalPlanner(SmoothWaypointFollowingLocalPlanner):
                 self.way_points_queue.popleft()
             else:
                 break
-        target_waypoint = target_waypoint * .5 + self.way_points_queue[0] * .5
+        target_waypoint_waypoint, speed_factor = self.next_waypoint_smooth_and_speed()
+        #target_waypoint_waypoint = self.way_points_queue[0]
+        target_waypoint = target_waypoint_lane * min(0.5,lane_detector.confidence) + \
+            target_waypoint_waypoint * max(1-lane_detector.confidence,0.5)
+        speed_factor = 1/math.exp(abs(lane_detector.dist_to_lane_center_integrate)*.5 +
+                                  abs(lane_detector.dist_to_lane_center)*0.0+
+                                  (1-lane_detector.confidence)*0.5)
+        self.logger.info("Speed factor: {}, confidence: {}".format(
+            speed_factor, lane_detector.confidence))
 
-        control: VehicleControl = self.controller.run_in_series(next_waypoint=target_waypoint)
+        control: VehicleControl = self.controller.run_in_series(
+            next_waypoint=target_waypoint, speed_multiplier=speed_factor)
         # self.logger.debug(f"\n"
         #                   f"Curr Transform: {self.agent.vehicle.transform}\n"
         #                   f"Target Transform: {target_waypoint}\n"

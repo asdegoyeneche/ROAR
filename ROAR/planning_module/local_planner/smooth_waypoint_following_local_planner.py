@@ -1,5 +1,5 @@
 from functools import reduce
-from typing import Union
+from typing import Tuple, Union
 
 from ROAR.planning_module.local_planner.simple_waypoint_following_local_planner import \
     SimpleWaypointFollowingLocalPlanner
@@ -13,9 +13,12 @@ import numpy as np
 
 class SmoothWaypointFollowingLocalPlanner(SimpleWaypointFollowingLocalPlanner):
 
-    def next_waypoint_smooth_and_speed(self, smooth_factor=300, speed_lookahead=300) -> (Transform, float):
+    def next_waypoint_smooth_and_speed(self, smooth_factor=300, speed_lookahead=300) -> Tuple[Transform, float]:
         smooth_factor = min(smooth_factor, len(self.way_points_queue))
-        speed_lookahead = min(speed_lookahead, len(self.way_points_queue))
+        speed_lookahead = min(speed_lookahead, len(self.way_points_queue)-1)
+        if speed_lookahead == 0 or smooth_factor//10 == 0:
+                self.logger.info("Destination reached")
+                return self.agent.vehicle.transform, 1
         sample_points = range(0, smooth_factor, smooth_factor//10)
 
         location_sum = reduce(lambda x, y: x + y,
@@ -40,7 +43,7 @@ class SmoothWaypointFollowingLocalPlanner(SimpleWaypointFollowingLocalPlanner):
 
         # delta_angle = angles[0] - angles[1]
 
-        print(speed_multiplier)
+        # print(speed_multiplier)
         num_points = len(sample_points)
         return Transform(location=location_sum / num_points, rotation=rotation_sum / num_points), speed_multiplier
 

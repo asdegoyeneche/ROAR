@@ -298,6 +298,7 @@ class LaneDetector(Detector):
         self.dist_to_lane_center = 0
         self.logger = logging.getLogger("LaneDetector")
         self.dist_to_lane_center_integrate = 0
+        self.confidence = 1
         # self.left_mem = deque(mem_size)
         # self.right_mem = deque(mem_size)
 
@@ -390,13 +391,18 @@ class LaneDetector(Detector):
             cv2.waitKey(1)
 
         # Lanes are two close meaning that only one lane is detected
-        if left_lane is not None and right_lane is not None and abs(left_lane[0][0]-right_lane[0][0]) < original_img.shape[1]/2:
-            if self.dist_to_lane_center_integrate > 0:  # Car is on the right side of lane center
-                left_lane = None
-            else:
-                right_lane = None
-            self.logger.debug('Duplicate lanes detected, recognize as ' +
-                              ('right lane' if left_lane is None else 'left lane'))
+        if left_lane is not None and right_lane is not None:
+            self.confidence = 1
+            if abs(left_lane[0][0]-right_lane[0][0]) < original_img.shape[1]/2:
+                if self.dist_to_lane_center_integrate > 0:  # Car is on the right side of lane center
+                    left_lane = None
+                else:
+                    right_lane = None
+                self.logger.debug('Duplicate lanes detected, recognize as ' +
+                                ('right lane' if left_lane is None else 'left lane'))
+                self.confidence = 0.4
+        else:
+            self.confidence *= 0.4
 
         # self.calculate_world_cords(np.array(left_lane+right_lane).T[::-1])
         # Convert to wold frame
@@ -439,24 +445,22 @@ class LaneDetector(Detector):
         else:
             self.left_lane = left_lane_world
 
-        if self.dist_to_lane_center_integrate <= 0:
-            #self.logger.info('Turning left')
-            self.right_lane += (self.right_lane - self.left_lane)*self.dist_to_lane_center_integrate
-            self.left_lane += (self.right_lane - self.left_lane)*self.dist_to_lane_center_integrate
-        elif self.dist_to_lane_center_integrate >= 0:
-            #self.logger.info('Turning right')
-            self.right_lane += (self.right_lane - self.left_lane)*self.dist_to_lane_center_integrate
-            self.left_lane += (self.right_lane - self.left_lane)*self.dist_to_lane_center_integrate
+        # self.right_lane += (self.right_lane - self.left_lane)*self.dist_to_lane_center_integrate
+        # self.left_lane += (self.right_lane - self.left_lane)*self.dist_to_lane_center_integrate
 
         self.lane_center = (self.left_lane + self.right_lane) / 2
         #car_center = self.agent.vehicle.transform.get_matrix()@np.r_[0,self.agent.vehicle.wheel_base/2,0,1]
         dist_to_lane_center = dist_to_line_2d(np.array([self.agent.vehicle.transform.location.x, self.agent.vehicle.transform.location.z]),
                                               self.lane_center[0, [0, 2]], self.lane_center[1, [0, 2]])
-        if dist_to_lane_center-self.dist_to_lane_center>1:
-            self.dist_to_lane_center_integrate=0.9*self.dist_to_lane_center_integrate+0.2
-        elif dist_to_lane_center-self.dist_to_lane_center<-1:
-            self.dist_to_lane_center_integrate=0.9*self.dist_to_lane_center_integrate-0.2
-
+        if dist_to_lane_center-self.dist_to_lane_center>2:
+            self.logger.info(f'Crossing left lane {self.dist_to_lane_center_integrate}')
+            self.dist_to_lane_center_integrate=1+self.dist_to_lane_center_integrate*0.6
+            self.confidence*=0.5
+        elif dist_to_lane_center-self.dist_to_lane_center<-2:
+            self.logger.info(f'Crossing right lane {self.dist_to_lane_center_integrate}')
+            self.dist_to_lane_center_integrate=-1+self.dist_to_lane_center_integrate*0.6
+            self.confidence*=0.5
+        self.dist_to_lane_center_integrate*=0.9
         # self.dist_to_lane_center +  self.dist_to_lane_center_integrate
         self.dist_to_lane_center = dist_to_lane_center
 
