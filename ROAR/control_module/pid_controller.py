@@ -51,15 +51,15 @@ class PIDController(Controller):
 
         # we have current position x, y, z, current velocity x, y, z, next waypoint position x, y, z,
         # next waypoint direction relative to the current position of the car x, y, z, steering, and throttle 
-        dataLine = "{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}\n".format(
-                        posBoi.x, posBoi.y, posBoi.z,
-                        velBoi[0], velBoi[1], velBoi[2],
-                        next_waypoint.location.x, next_waypoint.location.y, next_waypoint.location.z,
-                        way_dir[0], way_dir[1], way_dir[2],
-                        steering,
-                        throttle)
-        with open("tmp/pid_data.csv", "a") as f:
-            f.write(dataLine)
+        # dataLine = "{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}\n".format(
+        #                 posBoi.x, posBoi.y, posBoi.z,
+        #                 velBoi[0], velBoi[1], velBoi[2],
+        #                 next_waypoint.location.x, next_waypoint.location.y, next_waypoint.location.z,
+        #                 way_dir[0], way_dir[1], way_dir[2],
+        #                 steering,
+        #                 throttle)
+        # with open("tmp/pid_data.csv", "a") as f:
+        #     f.write(dataLine)
 
         return VehicleControl(throttle=throttle, steering=steering)
 

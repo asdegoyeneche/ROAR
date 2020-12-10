@@ -75,7 +75,7 @@ class LQRController(Controller):
         else: # if we are getting back on track, gradually reduce our error 
             self.errBoi = self.errBoi*(1-self.errAlpha) + absErr*self.errAlpha
         # reduce our target speed based on how far off target we are
-        # target_speed *= (math.exp(-self.errBoi) - 1)*self.slowdown + 1
+        # target_speed *= (math.exp(-self.errBoi) - 1) * self.slowdown + 1
         target_speed *= max((math.cos(self.errBoi) - 1) * self.slowdown, -self.maxSlow) + 1
 
         ## Note for future: It may be helpful to have another module for adaptive speed control and some way to slowly
@@ -92,7 +92,7 @@ class LQRController(Controller):
         # convert back to ut and clip our inputs
         ut = ht + ud
         steering = np.clip(ut[0], self.steering_boundary[0], self.steering_boundary[1])
-        throttle = np.clip(ut[1], self.throttle_boundary[0], self.throttle_boundary[1])
+        throttle = np.clip(ut[1], 10 * self.throttle_boundary[0], 10 * self.throttle_boundary[1])
         
         return VehicleControl(steering=steering, throttle=throttle)
         
