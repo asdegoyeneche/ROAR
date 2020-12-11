@@ -92,7 +92,7 @@ class LQRController(Controller):
         # convert back to ut and clip our inputs
         ut = ht + ud
         steering = np.clip(ut[0], self.steering_boundary[0], self.steering_boundary[1])
-        throttle = np.clip(ut[1], 10 * self.throttle_boundary[0], 10 * self.throttle_boundary[1])
+        throttle = np.clip(ut[1], self.throttle_boundary[0], self.throttle_boundary[1])
         
         return VehicleControl(steering=steering, throttle=throttle)
         
