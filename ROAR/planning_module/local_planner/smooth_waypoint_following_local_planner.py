@@ -64,7 +64,7 @@ class SmoothWaypointFollowingLocalPlanner(SimpleWaypointFollowingLocalPlanner):
             # print(speed_lookahead, len(self.way_points_queue))
             angle_difference = self._calculate_angle_error(self.way_points_queue[speed_lookahead])
             # Angle difference is between 0 and 180, but unlikely to be more than 90
-            speed_multiplier = max(0.6, (1.0 - 0.5 * angle_difference / np.pi))
+            speed_multiplier = max(0.6, (1.0 - 1.3 * angle_difference / np.pi))
             # speed_multiplier = np.exp(- 2.0 * angle_difference) * 0.5 + 0.5
             # speed_multiplier = max(0.5, (1.0 - angle_difference / np.pi) ** 1.5)
             # speed_multiplier = max(0.5, (2.0 - (1.0 + angle_difference) ** 2))

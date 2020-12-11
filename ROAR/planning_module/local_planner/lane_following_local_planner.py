@@ -23,6 +23,10 @@ from pathlib import Path
 
 class LaneFollowingLocalPlanner(SmoothWaypointFollowingLocalPlanner):
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.speed_factor = 1.0
+
     def run_in_series(self) -> VehicleControl:
         """
         Run step for the local planner
@@ -86,14 +90,17 @@ class LaneFollowingLocalPlanner(SmoothWaypointFollowingLocalPlanner):
         #target_waypoint_waypoint = self.way_points_queue[0]
         target_waypoint = target_waypoint_lane * min(0.5,lane_detector.confidence) + \
             target_waypoint_waypoint * max(1-lane_detector.confidence,0.5)
-        speed_factor = 1/math.exp(abs(lane_detector.dist_to_lane_center_integrate)*.5 +
-                                  abs(lane_detector.dist_to_lane_center)*0.0+
-                                  (1-lane_detector.confidence)*0.5)
+        speed_factor = max(0.5,
+                           1/math.exp(abs(lane_detector.dist_to_lane_center_integrate)*.3 +
+                                      abs(lane_detector.dist_to_lane_center)*0.0 +
+                                      (1-lane_detector.confidence)*0.3))
+        self.speed_factor = 0.995 * self.speed_factor + 0.005 * speed_factor
+        # speed_factor = 1.0
         self.logger.info("Speed factor: {}, confidence: {}".format(
             speed_factor, lane_detector.confidence))
 
         control: VehicleControl = self.controller.run_in_series(
-            next_waypoint=target_waypoint, speed_multiplier=speed_factor)
+            next_waypoint=target_waypoint, speed_multiplier=self.speed_factor)
         # self.logger.debug(f"\n"
         #                   f"Curr Transform: {self.agent.vehicle.transform}\n"
         #                   f"Target Transform: {target_waypoint}\n"
