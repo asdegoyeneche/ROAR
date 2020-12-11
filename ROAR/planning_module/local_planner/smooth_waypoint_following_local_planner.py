@@ -13,7 +13,23 @@ import numpy as np
 
 class SmoothWaypointFollowingLocalPlanner(SimpleWaypointFollowingLocalPlanner):
 
-    def next_waypoint_smooth_and_speed(self, smooth_factor=400, speed_lookahead=600) -> (Transform, float):
+    def next_waypoint_smooth_and_speed(self, smooth_factor=50, speed_lookahead=50) -> (Transform, float):
+        # car_speed = np.linalg.norm(self.agent.vehicle.velocity.to_array()) * 3.6  # m/s to km/hr
+        # lookahead_multiplier = car_speed / 170  # self.agent.agent_settings.target_speed
+        #
+        # waypoint_lookahead = max(waypoint_lookahead // 2, int(waypoint_lookahead * lookahead_multiplier))
+        # speed_lookahead = max(speed_lookahead // 2, int(speed_lookahead * lookahead_multiplier))
+        #
+        # waypoint_lookahead = min(waypoint_lookahead, len(self.way_points_queue) - 1)
+        # speed_lookahead = min(speed_lookahead, len(self.way_points_queue) - 1)
+        #
+        # print("WAYPOINT", waypoint_lookahead)
+        #
+        # if waypoint_lookahead > 1:  # can get rid of if statement here
+        #     target_waypoint = self.way_points_queue[waypoint_lookahead]
+        # else:
+        #     target_waypoint = self.way_points_queue[-1]
+
         smooth_factor = min(smooth_factor, len(self.way_points_queue) - 1)
         speed_lookahead = min(speed_lookahead, len(self.way_points_queue) - 1)
 
@@ -45,16 +61,16 @@ class SmoothWaypointFollowingLocalPlanner(SimpleWaypointFollowingLocalPlanner):
         # speed_multiplier = (1.0 - angle_difference / np.pi)
 
         if speed_lookahead > 0:
-            print(speed_lookahead, len(self.way_points_queue))
+            # print(speed_lookahead, len(self.way_points_queue))
             angle_difference = self._calculate_angle_error(self.way_points_queue[speed_lookahead])
             # Angle difference is between 0 and 180, but unlikely to be more than 90
-            speed_multiplier = max(0.6, (1.0 - 1.3 * angle_difference / np.pi))
+            speed_multiplier = max(0.6, (1.0 - 0.5 * angle_difference / np.pi))
             # speed_multiplier = np.exp(- 2.0 * angle_difference) * 0.5 + 0.5
             # speed_multiplier = max(0.5, (1.0 - angle_difference / np.pi) ** 1.5)
             # speed_multiplier = max(0.5, (2.0 - (1.0 + angle_difference) ** 2))
 
-            print("Angle difference:", np.degrees(angle_difference))
-            print("Speed Multiplier", speed_multiplier)
+            # print("Angle difference:", np.degrees(angle_difference))
+            # print("Speed Multiplier", speed_multiplier)
         else:
             speed_multiplier = 0.0
 
