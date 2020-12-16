@@ -6,6 +6,7 @@ import logging
 from typing import Any
 from ROAR.agent_module.agent import Agent
 from ROAR.perception_module.detector import Detector
+from ROAR.perception_module.lane_detector import grayscale, canny, gaussian_blur, region_of_interest
 
 import cv2
 import math
@@ -19,10 +20,12 @@ class ObjectDetector(Detector):
     def __init__(self, agent: Agent, camera: Camera, name: str, **kwargs):
         super().__init__(agent, **kwargs)
         self.camera = camera
+        self.img_list = []
         self.name = name
 
     def run_in_series(self, **kwargs) -> Any:
         depth_img = self.camera.data
+        self.img_list.append(depth_img)
         self.process_image(depth_img, visualize=True)
 
     def run_in_threaded(self, **kwargs):
@@ -32,7 +35,14 @@ class ObjectDetector(Detector):
         if image is None:
             return None
 
-        processed_img = np.copy(image)
+        gray = grayscale(image)
+        ret, thresh = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY)
+
+        kernel = np.ones((3,3), np.uint8)
+        dilated = cv2.dilate(thresh, kernel, iterations = 1)
+
+        processed_img = dilated
+
 
         if visualize:
             cv2.imshow(self.name + " depth img", processed_img)
