@@ -36,12 +36,16 @@ class LQRAgent(Agent):
             closeness_threshold=1)
         self.lane_detector = LaneDetector(agent=self)
         self.front_rgb_camera = self.agent_settings.front_rgb_cam
-        self.left_depth_camera = self.agent_settings.left_depth_cam
-        self.right_depth_camera = self.agent_settings.right_depth_cam
-        self.left_obj_detector = ObjectDetector(agent=self, camera=self.left_depth_camera, name="left")
-        self.right_obj_detector = ObjectDetector(agent=self, camera=self.right_depth_camera, name="right")
+        self.front_depth_camera = self.agent_settings.front_depth_cam
+        self.obj_detector = ObjectDetector(agent=self, camera=self.front_depth_camera, name="front")
+        #self.left_depth_camera = self.agent_settings.left_depth_cam
+        #self.right_depth_camera = self.agent_settings.right_depth_cam
+        self.left_depth_camera = None
+        self.right_depth_camera = None
+        #self.left_obj_detector = ObjectDetector(agent=self, camera=self.left_depth_camera, name="left")
+        #self.right_obj_detector = ObjectDetector(agent=self, camera=self.right_depth_camera, name="right")
 
-        self.init_depth_cams()
+        #self.init_depth_cams()
 
         self.logger.debug(
             f"Waypoint Following Agent Initiated. Reading f"
@@ -53,8 +57,9 @@ class LQRAgent(Agent):
                                        sensors_data=sensors_data)
         self.transform_history.append(self.vehicle.transform)
         self.lane_detector.run_in_series()
-        self.left_obj_detector.run_in_series()
-        self.right_obj_detector.run_in_series()
+        self.obj_detector.run_in_series()
+        #self.left_obj_detector.run_in_series()
+        #self.right_obj_detector.run_in_series()
         if self.local_planner.is_done():
             control = VehicleControl()
             self.logger.debug("Path Following Agent is Done. Idling.")
