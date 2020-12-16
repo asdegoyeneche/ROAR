@@ -1,4 +1,4 @@
-from ROAR.agent_module.pid_agent import PIDAgent
+from ROAR.agent_module.lqr_agent import LQRAgent
 import logging, warnings
 import numpy as np
 from ROAR_Sim.configurations.configuration import Configuration as CarlaConfig
@@ -60,7 +60,7 @@ def suppress_warnings():
 
 def main():
     suppress_warnings()
-    agent_class = PIDAgent
+    agent_class = LQRAgent
     num_trials = 2
     total_score = 0
     table = PrettyTable()

@@ -75,7 +75,7 @@ class LQRController(Controller):
         else: # if we are getting back on track, gradually reduce our error 
             self.errBoi = self.errBoi*(1-self.errAlpha) + absErr*self.errAlpha
         # reduce our target speed based on how far off target we are
-        # target_speed *= (math.exp(-self.errBoi) - 1)*self.slowdown + 1
+        # target_speed *= (math.exp(-self.errBoi) - 1) * self.slowdown + 1
         target_speed *= max((math.cos(self.errBoi) - 1) * self.slowdown, -self.maxSlow) + 1
 
         ## Note for future: It may be helpful to have another module for adaptive speed control and some way to slowly

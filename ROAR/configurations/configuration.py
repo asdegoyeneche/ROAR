@@ -102,9 +102,9 @@ class Configuration(BaseModel):
         description="This variable is used to intialize the Occupancy grid map."
                     "The bigger it is, the more impact it is going to have on the runtime computation"
                     "However, if it is smaller than the actual map, some weird things can happen")
-    target_speed: int = 160
+    target_speed: int = 220
     pid_config_file_path: str = Field(default="./ROAR_Sim/configurations/pid_config.json")
     lqr_config_file_path: str = Field(default="./ROAR_Sim/configurations/lqr_config.json")
     simple_waypoint_local_planner_config_file_path: str = \
         Field(default="./ROAR_Sim/configurations/simple_waypoint_local_planner_config.json")
-    max_speed: float = Field(default=200, description="maximum speed in which the vehicle can drive at")
+    max_speed: float = Field(default=250, description="maximum speed in which the vehicle can drive at")
