@@ -40,6 +40,8 @@ Having trouble with Pages? Check out our [documentation](https://docs.github.com
 
 ### Lane Detection
 
+![Lane Detection](./lane_detection.png)
+
 The lane detector takes the images captured by the front RGB and depth camera as input and calculates the 3-D world coornidates of the left lane, right lane, and lane center in sight. At each time step, the procedure of lane detection algorithm is as follows:
 
 - Converts the original RGB image to a grayscale image.
