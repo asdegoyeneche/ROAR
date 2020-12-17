@@ -6,6 +6,7 @@ import logging
 from typing import Any
 from ROAR.agent_module.agent import Agent
 from ROAR.perception_module.detector import Detector
+from ROAR.perception_module.lane_detector import grayscale, canny, gaussian_blur, region_of_interest
 
 import cv2
 import math
@@ -40,7 +41,7 @@ class ObjectDetector(Detector):
             return None
 
         diff_image = cv2.absdiff(gray_img, self.prev_img)
-        ret, thresh = cv2.threshold(diff_image, 60, 255, cv2.THRESH_BINARY)
+        ret, thresh = cv2.threshold(diff_image, 100, 255, cv2.THRESH_BINARY)
 
         kernel = np.ones((3, 3), np.uint8)
         dilated = cv2.dilate(thresh, kernel, iterations=1)
