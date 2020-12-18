@@ -96,9 +96,9 @@ __*Masking*__
 - __*Process*__ both images and merge them together to detect obstacles.
     
 __*Processing*__
-- Convert the original RGB image to a grayscale image. [Thanks Lab 6](https://ucb-ee106.github.io/106a-fa20site/assets/labs/106A_Lab6_Fa20_REMOTE.pdf)
+- Convert the original RGB image to a grayscale image. [Thanks Lab 6.](https://ucb-ee106.github.io/106a-fa20site/assets/labs/106A_Lab6_Fa20_REMOTE.pdf)
 - Blur the image using a gaussian kernel so that the image is smoothened, and to counteract the effect of the car's moving camera.
-- Apply adaptive thresholding on the blurred image to distinguish between objects of interest and the background.  [Thanks Lab 6](https://ucb-ee106.github.io/106a-fa20site/assets/labs/106A_Lab6_Fa20_REMOTE.pdf)
+- Apply adaptive thresholding on the blurred image to distinguish between objects of interest and the background.  [Thanks Lab 6.](https://ucb-ee106.github.io/106a-fa20site/assets/labs/106A_Lab6_Fa20_REMOTE.pdf)
 - Find and draw rectangular contours to identify objects of interest.
 
 
