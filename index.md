@@ -45,7 +45,7 @@ Only using pre-recorded waypoints, the controller in the starter code is able to
 
 The controller receives the coordinates of the next waypoint and the desired speed from the path planner. From this, we found the *difference in speed* between our current speed and target speed and the *difference in angle* between our current trajectory and the next waypoint (see figure below), and selected steering and throttle values to correct any deviation.
 
-![Controller Knowledge](images/control_in.jpg =250x)
+<img title="Controller Knowledge" src="images/control_in.jpg" width="250">
 
 The starter code came with two separate [PID controllers](https://en.wikipedia.org/wiki/PID_controller), but we found this difficult to tune due to the mental mismatch between the quantitative *K<sub>p</sub>, K<sub>i</sub>, K<sub>d</sub>* parameters and the qualitative desired behavior (e.g. “more sensitive steering”). Additionally, there was no coordination between steering and throttle, which resulted in very aggressive turns, and the PID controllers did not account for the drag of the car, which resulted in the car going ~10% slower than the target speed.
 
