@@ -173,14 +173,7 @@ Now we get to show our fun little videos of the car driving!
 
 ### Sensing and Planning  <a name="results_sense_plan"></a>
 
-Our car successfully detects and follows lanes at lower speeds (50 km/hr)! Below are two instances of the car driving. The one above directly follows the waypoints, while the one below includes lane-keeping. 
-
-{% include youtubePlayer.html id="dbFgMa_l4K8" %} 
-
-{% include youtubePlayer.html id="rZt_j8n-sSU" %}
-
-And here's a side-by-side comparison, with no lane-keeping on the left, and lane-keeping on the right. Notice the wild swerving when the car attempts to turn without any lane-keeping, and the lack thereof with the help of lane-keeping. 
-
+Our car successfully detects and follows lanes at lower speeds (50 km/hr)! Below is a side-by-side comparison  with no lane-keeping on the left, and lane-keeping on the right. The one of the left directly follows the waypoints, while the one on the right includes lane-keeping. Notice the wild swerving when the car attempts to turn without any lane-keeping, and the lack thereof with the help of lane-keeping. 
 
 No Lane Keeping        |  Lane Keeping
 :-------------------------:|:-------------------------:
@@ -207,7 +200,7 @@ The waypoint-lookahead planner allowed us to take turns more smoothly and cut in
 
 No waypoint lookahead smoothing       |  Waypoint lookahead smoothing
 :-------------------------:|:-------------------------:
-![No smooth](./videos/NoSmoothing.mp4) | ![Smooth](./videos/Smoothing.mp4)
+![No smooth](./videos/NoSmoothing.gif) | ![Smooth](./videos/Smoothing.gif)
 
 
 We found that the performance of the lookahead planner was dependent on the speed of the car, the placement of the waypoints, and the shape of the turn. Thus, we do not know how well this planner will perform on an arbitrary track that we haven’t seen before. However, as seen above, given the opportunity to tune the speed of the car and the amount we look ahead, we can achieve very good turns.
