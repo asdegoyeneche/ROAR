@@ -35,8 +35,7 @@ class LQRAgent(Agent):
             behavior_planner=self.behavior_planner,
             closeness_threshold=1)
         self.lane_detector = LaneDetector(agent=self)
-        self.front_rgb_camera = self.agent_settings.front_rgb_cam
-        self.obj_detector = ObjectDetector(agent=self, camera=self.front_rgb_camera, name="front rgb")
+        self.obj_detector = ObjectDetector(agent=self, camera=self.front_rgb_camera, name="front")
         #self.left_depth_camera = self.agent_settings.left_depth_cam
         #self.right_depth_camera = self.agent_settings.right_depth_cam
         self.left_depth_camera = None
