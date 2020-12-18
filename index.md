@@ -17,9 +17,9 @@ Given this setup, our goals were to detect lanes and obstacles, plan a path that
 
 With these goals in mind, we split these tasks into four parts -- sensing, planning, controlling, and racing -- and made the following design choices:
 
-### Sensing
+### Sensing and Planning
 
-### Planning
+Only using pre-recorded waypoints, the controller in the starter code is able to run a loop without the assistance of perception. However, there are some zig-zags in the path due to the poor quality of the waypoints. In order to overcome this, we optimize the path by letting the car follow the lane center and avoid objects. We use a front RGB camera to detect white and yellow lane segments in front of the car and use a front depth camera to calculate their 3-D coordinates. Instead of only following lanes, which sometimes cannot be detected, we use lanes as an augmentation to “correct” improper waypoints. That is, the input of the controller is decided by a combination of lane center and pre-recorded waypoints. This design allows us to generate a smooth path when lanes are visible and follow the waypoints when lanes are not visible.
 
 ### Controlling
 
@@ -79,7 +79,7 @@ Now we get to show our fun little videos of the car driving!
 
 ### Sensing and Planning
 
-Our car successfully detects and follows lanes at lower speeds (50 km/hr)! Below are two instances of the car driving. The one on the left directly follows the waypoints while the one on the right includes lane keeping. 
+Our car successfully detects and follows lanes at lower speeds (50 km/hr)! Below are two instances of the car driving. The one above directly follows the waypoints, while the one below includes lane-keeping.
 
 {% include youtubePlayer.html id="dbFgMa_l4K8" %}
 
@@ -124,7 +124,7 @@ I think one of our biggest difficulties was a lack of regular communication betw
 
 **Aman Sidhant.** 
 
-**Sihao Chen.** 
+**Sihao Chen.** Sihao is a Master of Engineering student in UC Berkeley EECS. He graduated from Northeastern University (China) in 2020 with a B.Eng. in software engineering. He is in the assistive mouse capstone project group supervised by Prof. Brian A. Barsky.  He led the perception part of this project, designed and implemented the lane detector and the lane following planner, and assisted with object detection.
 
 **Wesley Wang.** 
 
