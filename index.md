@@ -201,7 +201,7 @@ PID Controller         |  LQR Controller
 ![PID controller](videos/PID.gif) | ![LQR controller](videos/LQR.gif)
 
 
-### Racing  <a name="results_race"></a>
+### Racing  <a name="results_racing"></a>
 
 The waypoint-lookahead planner allowed us to take turns more smoothly and cut in on the corners. Below are two instances of the car taking a turn. The one on the left is without the lookahead, while the one on the right uses waypoint lookahead.
 
