@@ -1,6 +1,6 @@
 # ROAR: Robot Open Autonomous Racing
 
-This website describes the work that Alfredo, Alvin, Aman, Sihao, and Wesley did for their EECS 206A final project at UC Berkeley during Fall 2020.
+This website describes the work that Alfredo, Alvin, Aman, Sihao, and Wesley did for their EECS 106A/206A final project at UC Berkeley during Fall 2020.
 
 
 ## Table of contents
@@ -126,6 +126,10 @@ Now we get to show our fun little videos of the car driving!
 ### Sensing and Planning  <a name="results_sense_plan"></a>
 
 Our car successfully detects and follows lanes at lower speeds (50 km/hr)! Below are two instances of the car driving. The one above directly follows the waypoints, while the one below includes lane-keeping. 
+
+{% include youtubePlayer.html id="dbFgMa_l4K8" %} 
+
+{% include youtubePlayer.html id="rZt_j8n-sSU" %}
 
 
 And here's a side-by-side comparison, with no lane-keeping on the left, and lane-keeping on the right.
