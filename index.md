@@ -41,6 +41,8 @@ With these goals in mind, we split these tasks into four parts -- sensing, plann
 
 Only using pre-recorded waypoints, the controller in the starter code is able to run a loop without the assistance of perception. However, there are some zig-zags in the path due to the poor quality of the waypoints. In order to overcome this, we optimize the path by letting the car follow the lane center and avoid objects. We use a front RGB camera to detect white and yellow lane segments in front of the car and use a front depth camera to calculate their 3-D coordinates. Instead of only following lanes, which sometimes cannot be detected, we use lanes as an augmentation to “correct” improper waypoints. That is, the input of the controller is decided by a combination of lane center and pre-recorded waypoints. This design allows us to generate a smooth path when lanes are visible and follow the waypoints when lanes are not visible.
 
+We also decided to use the front RGB camera's image feed for detecting obstacles in the car's way, such as an NPC car on the track, or the walls on the sides on the track. We would then use these signals to plan the car's immediate route so as to avoid these obstacles. For instance, if the camera shows a group of cars in front, the car would automatically course correct and find a path that takes it around or between the other cars.
+
 ### Controlling <a name="design_control"></a>
 
 The controller receives the coordinates of the next waypoint and the desired speed from the path planner. From this, we found the *difference in speed* between our current speed and target speed and the *difference in angle* between our current trajectory and the next waypoint (see figure below), and selected steering and throttle values to correct any deviation.
@@ -71,6 +73,24 @@ The lane detector takes the images captured by the front RGB and depth camera as
 - Calculates hough lines from each image and takes their average to form two straight lines as our detected lanes.
 - Calculates world coordinates of lanes using depth camera image.
 - Use the average of world coordinates of the left and right lanes as the lane center.
+
+#### Obstacle Detection
+
+The object detection algorithm uses the front RGB camera's image feed as its input, and at each time step, identifies any obstacles in the camera's field of view. For this track, exampless of obstacles included other cars, walls on both sides of the track, and barricades.
+
+We initially tried to use the entire input image from the RGB camera as is. However, we quickly ran into problems with this approach because we couldn't figure out how to separate the processes to detect walls and other objects on the track, which resulted in our algorithm detecting walls and cars as one 'obstacle'.
+
+After giving it some thought, we realized something obvious - the walls are always on the sides of track. To take advantage of this fact, we used three masks on every input image before processsing it further - left and right masks (to focus on detecting walls) and a middle mask (for obstacles directly on the track). This increased the accuracy of detection significantly.
+
+[insert image here - three masks side by side, and arrows pointing to respective parts of the input image]
+
+Once the masks are applied, we 
+
+In summary, our algorithm has the following key steps
+
+- Convert the original RGB image to a grayscale image
+- Blur the image using a gaussian kernel so that the image is smoothened, and to counteract the effect of the moving camera of the car.
+
 
 ### Planning  <a name="impl_plan"></a>
 
