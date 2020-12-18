@@ -120,19 +120,26 @@ We were also able to detect obstacles in front of the car, as seen below, but di
 ### Controlling
 The LQR controller performed notably better than the original PID controllers. Below we can see two instances of the car. The one on the left is using the PID controllers, while the one on the right is using the LQR controller. We tuned both controllers as well as we could.
 
-[PID car]  [LQR car]
+PID Controller         |  LQR Controller
+:-------------------------:|:-------------------------:
+![PID controller](videos/PID.gif) | ![LQR controller](videos/LQR.gif)
+
 
 ### Racing
 
 The waypoint-lookahead planner allowed us to take turns more smoothly and cut in on the corners. Below are two instances of the car taking a turn. The one on the left is without the lookahead, while the one on the right uses waypoint lookahead.
 
-[squiggly turn car]  [smooth turn car]
+No waypoint lookahead smoothing       |  Waypoint lookahead smoothing
+:-------------------------:|:-------------------------:
+![No smooth](videos/NoSmoothing.mp4) | ![Smooth](videos/Smoothing.mp4)
+
 
 We found that the performance of the lookahead planner was dependent on the speed of the car, the placement of the waypoints, and the shape of the turn. Thus, we do not know how well this planner will perform on an arbitrary track that we haven’t seen before. However, as seen above, given the opportunity to tune the speed of the car and the amount we look ahead, we can achieve very good turns.
 
 We submitted our car to the ROAR competition and won the  [Grand Prize for this year’s 2020 ROAR S1 series](https://vivecenter.berkeley.edu/research1/roar/), reaching a max speed of 188 km/hr along a figure-eight shaped track. A video of our car running a single lap can be found below. There are some tight corners and some instances where the car slows down unnecessarily, but overall the racing portion performed quite well.
 
-[video of car running a single lap]
+
+![ROAR Race](videos/ROAR_race.mp4)
 
 ## Conclusion
 
