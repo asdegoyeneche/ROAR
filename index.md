@@ -43,7 +43,7 @@ For the racing aspect, we optimized our route and speed based on previously acqu
 
 ![Lane Detection](images/lane_detection.png)
 
-The lane detector takes the images captured by the front RGB and depth camera as input and calculates the 3-D world coordinates of the left lane, right lane, and lane center in sight. At each time step, the procedure of ltane detection algorithm is as follows:
+The lane detector takes the images captured by the front RGB and depth camera as input and calculates the 3-D world coordinates of the left lane, right lane, and lane center in sight. At each time step, the procedure of lane detection algorithm is as follows:
 
 - Converts the original RGB image to a grayscale image.
 - Calculates the canny edges of the image.
@@ -80,7 +80,7 @@ def follow_lane(waypoints, α: confidence decay rate 0 ~ 1, β: speed limit fact
 
 #### Smooth Waypoint Following Planner
 
-`ROAR/planning_module/local_planner/smooth_waypoint_following_local_planner.py` contains the main logic for our smooth waypoint lookahead path planner. From our waypoints, we look ahead `smooth_factor` waypoints for path smoothing and `speed_lookahead`  for defining our target speed factor. The target waypoint provided to the controller is obtained by averaging the `smooth_factor` points ahead. However, this can be quite computationally expensive, thus uniform sampling from these is used instead. Then, for our proactive speed control, we compute the angle relative to the car’s current orientation of the waypoint  `speed_lookahead` steps ahead. Finally, our target speed for our controller is multiplied by a factor that is decreases linearly when this error increases. The pseudocode is as follows:
+`ROAR/planning_module/local_planner/smooth_waypoint_following_local_planner.py` contains the main logic for our smooth waypoint lookahead path planner. From our waypoints, we look ahead `smooth_factor` waypoints for path smoothing and `speed_lookahead`  for defining our target speed factor. The target waypoint provided to the controller is obtained by averaging the `smooth_factor` points ahead. However, this can be quite computationally expensive, thus uniform sampling from these is used instead. Then, for our proactive speed control, we compute the angle relative to the car’s current orientation of the waypoint `speed_lookahead` steps ahead. Finally, our target speed for our controller is multiplied by a factor that is decreases linearly when this error increases. The pseudocode is as follows:
 
 ```python3
 def next_waypoint_smooth_and_speed(self, smooth_factor: int, speed_lookahead:int ) -> (Transform, float):
