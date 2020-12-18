@@ -40,7 +40,7 @@ To correct these issues, we made two notable changes. First, we added reactive s
 
 #### Lane Detection
 
-![Lane Detection](./lane_detection.png)
+![Lane Detection](images/lane_detection.png)
 
 The lane detector takes the images captured by the front RGB and depth camera as input and calculates the 3-D world coornidates of the left lane, right lane, and lane center in sight. At each time step, the procedure of lane detection algorithm is as follows:
 
@@ -81,7 +81,9 @@ Now we get to show our fun little videos of the car driving!
 
 Our car successfully detects and follows lanes at lower speeds (50 km/hr)! Below are two instances of the car driving. The one on the left directly follows the waypoints while the one on the right includes lane keeping. 
 
-[video of car without lane keeping]  [video of car with lane keeping]
+<figure class="video_container">
+  <iframe src="https://youtu.be/dbFgMa_l4K8" frameborder="0" allowfullscreen="true"> </iframe>
+</figure>
 
 We found that it was difficult to keep track of lanes denoted by dashed lines because the dashes were short and spaced rather far apart. This problem was exacerbated during turns, where the dashed lines in a lane were not even aligned with each other, making it difficult to stay in our lane while turning at higher speeds.
 
