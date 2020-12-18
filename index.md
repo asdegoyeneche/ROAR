@@ -91,14 +91,15 @@ In summary, our algorithm has the following key steps
 __*Masking*__
 - Divide the image into three areas of interest - left, right, and center.
 - Apply bitwise masks on each of the areas of interest to segment the relevant parts of the image:
-    - Left and Right masks to detect walls
-    - Center mask to detect objects on the track
-- __*Process*__ both images and merge them together to detect obstacles
+    - Left and Right masks to detect walls.
+    - Center mask to detect objects on the track.
+- __*Process*__ both images and merge them together to detect obstacles.
     
-__Processing__
-- Convert the original RGB image to a grayscale image.
+__*Processing*__
+- Convert the original RGB image to a grayscale image. [Thanks Lab 6](https://ucb-ee106.github.io/106a-fa20site/assets/labs/106A_Lab6_Fa20_REMOTE.pdf)
 - Blur the image using a gaussian kernel so that the image is smoothened, and to counteract the effect of the car's moving camera.
-- Apply adaptive thresholding on the blurred image
+- Apply adaptive thresholding on the blurred image to distinguish between objects of interest and the background.  [Thanks Lab 6](https://ucb-ee106.github.io/106a-fa20site/assets/labs/106A_Lab6_Fa20_REMOTE.pdf)
+- Find and draw rectangular contours to identify objects of interest.
 
 
 ### Planning  <a name="impl_plan"></a>
