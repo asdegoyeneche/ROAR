@@ -104,7 +104,7 @@ __*Processing*__
 
 Camera Feed       |  Thresholding Applied
 :-------------------------:|:-------------------------:
-![Feed](./videos/plain-short-Trim.gif) | ![Thresholding](./videos/thresh-short-Trim.gif)
+![Feed](./plainFin-2020-12-18-15-27-50-Tri.gif) | ![Thresholding](./thresholdingFin-2020-12-18-15-26.gif)
 
 
 ### Planning  <a name="impl_plan"></a>
