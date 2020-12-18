@@ -217,9 +217,9 @@ No Lane Keeping        |  Lane Keeping
 
 We found that it was difficult to keep track of lanes denoted by dashed lines because the dashes were short and spaced rather far apart. This problem was exacerbated during turns, where the dashed lines in a lane were not even aligned with each other, making it difficult to stay in our lane while turning at higher speeds.
 
-We were also able to detect obstacles in front of the car, as seen below, but did not have enough time to incorporate it into our planning for obstacle avoidance.
+Additionally, we were able to detect obstacles in front of the car, as seen below. However, we couldn't combine it with a planning algorithm to fully perform obstacle avoidance.
 
-[video or image of car detecting obstacles?]
+{% include youtubePlayer.html id="2DqhY0IRHjY" %}
 
 ### Controlling <a name="results_control"></a>
 The LQR controller performed notably better than the original PID controllers. Below we can see two instances of the car. The one on the left is using the PID controllers, while the one on the right is using the LQR controller. Notice the behavior of the car after the turns in both GIFs - there is a substantial difference in the stability of the car, with the LQR controller providing much better performance than the PID controller. We tuned both controllers as well as we could.
