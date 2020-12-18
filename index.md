@@ -81,9 +81,7 @@ Now we get to show our fun little videos of the car driving!
 
 Our car successfully detects and follows lanes at lower speeds (50 km/hr)! Below are two instances of the car driving. The one on the left directly follows the waypoints while the one on the right includes lane keeping. 
 
-<figure class="video_container">
-  <iframe src="https://youtu.be/dbFgMa_l4K8" frameborder="0" allowfullscreen="true"> </iframe>
-</figure>
+{% include youtubePlayer.html id=dbFgMa_l4K8 %}
 
 We found that it was difficult to keep track of lanes denoted by dashed lines because the dashes were short and spaced rather far apart. This problem was exacerbated during turns, where the dashed lines in a lane were not even aligned with each other, making it difficult to stay in our lane while turning at higher speeds.
 
