@@ -33,6 +33,7 @@ To correct these issues, we made two notable changes. First, we added reactive s
 
 ### Racing
 
+For the racing aspect, we optimized our route and speed based on previously acquired track waypoints. These waypoints can be acquired at lower speeds with other sensing and planning strategies such as our lane following module. We optimized our controllers for high speeds and implemented a waypoint smoothing and look-ahead algorithm to take turns more smoothly, cut in on the corners, and adjust the speed accordingly. 
 
 ## Implementation
 
@@ -42,18 +43,20 @@ To correct these issues, we made two notable changes. First, we added reactive s
 
 ![Lane Detection](images/lane_detection.png)
 
-The lane detector takes the images captured by the front RGB and depth camera as input and calculates the 3-D world coornidates of the left lane, right lane, and lane center in sight. At each time step, the procedure of lane detection algorithm is as follows:
+The lane detector takes the images captured by the front RGB and depth camera as input and calculates the 3-D world coordinates of the left lane, right lane, and lane center in sight. At each time step, the procedure of lane detection algorithm is as follows:
 
 - Converts the original RGB image to a grayscale image.
 - Calculates the canny edges of the image.
-- Cuts out two triangle-shaped areas of interests, one on the left bottom part of the image, another on the right bottom part.
-- Calculates hough lines from each image and take their average to form two straight lines as our detected lanes.
+- Cuts out two triangle-shaped areas of interest, one on the left bottom part of the image, another on the right bottom part.
+- Calculates hough lines from each image and takes their average to form two straight lines as our detected lanes.
 - Calculates world coordinates of lanes using depth camera image.
-- Use the average of world coordinates of left and right lanes as the lane center.
+- Use the average of world coordinates of the left and right lanes as the lane center.
 
 ### Planning
 
-`lane_following_local_planner.py` contains the main logic of our lane following planner. We define a variable, confidence, which is a scalar between 0 and 1. It decays exponentially when a lane is not detected, and is reset to 1 when both are detected.  We calculate the target location based on a weighted sum of the mid point of lane center and the next waypoint. We also limit the target speed by confidence. The location of the next waypoint and target speed are then fed into our controller. The pseudocode of the lane following algorithm is as follows:
+#### Lane Following
+
+`ROAR/planning_module/local_planner/lane_following_local_planner.py` contains the main logic of our lane following planner. We define a variable, confidence, which is a scalar between 0 and 1. It decays exponentially when a lane is not detected, and is reset to 1 when both are detected.  We calculate the target location based on a weighted sum of the mid point of lane center and the next waypoint. We also limit the target speed by confidence. The location of the next waypoint and target speed are then fed into our controller. The pseudocode of the lane following algorithm is as follows:
 
 ```python3
 def follow_lane(waypoints, α: confidence decay rate 0 ~ 1, β: speed limit factor > 0):
@@ -73,17 +76,36 @@ def follow_lane(waypoints, α: confidence decay rate 0 ~ 1, β: speed limit fact
 ### Controlling
 
 
+### Racing
+
+#### Smooth Waypoint Following Planner
+
+`ROAR/planning_module/local_planner/smooth_waypoint_following_local_planner.py` contains the main logic for our smooth waypoint lookahead path planner. From our waypoints, we look ahead `smooth_factor` waypoints for path smoothing and `speed_lookahead`  for defining our target speed factor. The target waypoint provided to the controller is obtained by averaging the `smooth_factor` points ahead. However, this can be quite computationally expensive, thus uniform sampling from these is used instead. Then, for our proactive speed control, we compute the angle relative to the car’s current orientation of the waypoint `speed_lookahead` steps ahead. Finally, our target speed for our controller is multiplied by a factor that is decreases linearly when this error increases. The pseudocode is as follows:
+
+```python3
+def next_waypoint_smooth_and_speed(self, smooth_factor: int, speed_lookahead:int ) -> (Transform, float):
+            
+    sample_points = range(0, smooth_factor, smooth_factor // sample_factor)
+    num_points = len(sample_points)             
+    mean_location = reduce(lambda x, y: x + y, (self.way_points_queue[i].location for i in sample_points))  / num_points           
+    mean_orientation = reduce(lambda x, y: x + y, (self.way_points_queue[i].rotation for i in sample_points)) / num_points            
+    target_waypoint = Transform(location=mean_location, rotation=mean_rotation)
+
+    angle_difference = self._calculate_angle_error(self.way_points_queue[speed_lookahead])
+    speed_multiplier = max(min_speed_factor, (1.0 - alpha * angle_difference / np.pi))
+
+    return target_waypoint, speed_multiplier
+```
+
+The returned values are passed into the controller `run_in_series` method.
+
 ## Results
 
 Now we get to show our fun little videos of the car driving!
 
 ### Sensing and Planning
 
-Our car successfully detects and follows lanes at lower speeds (50 km/hr)! Below are two instances of the car driving. The one above directly follows the waypoints, while the one below includes lane-keeping.
-
-{% include youtubePlayer.html id="dbFgMa_l4K8" %}
-
-{% include youtubePlayer.html id="rZt_j8n-sSU" %}
+Our car successfully detects and follows lanes at lower speeds (50 km/hr)! Below are two instances of the car driving. The one above directly follows the waypoints, while the one below includes lane-keeping. 
 
 
 And here's a side-by-side comparison, with no lane-keeping on the left, and lane-keeping on the right.
@@ -102,20 +124,26 @@ We were also able to detect obstacles in front of the car, as seen below, but di
 ### Controlling
 The LQR controller performed notably better than the original PID controllers. Below we can see two instances of the car. The one on the left is using the PID controllers, while the one on the right is using the LQR controller. We tuned both controllers as well as we could.
 
-[PID car]  [LQR car]
+PID Controller         |  LQR Controller
+:-------------------------:|:-------------------------:
+![PID controller](videos/PID.gif) | ![LQR controller](videos/LQR.gif)
+
 
 ### Racing
 
-The waypoint-lookahead planner allowed us to take turns more smoothly and cut in on the corners. Below are two instances of the car taking a turn. The one on the left is without lookahead, while the one on the right uses waypoint lookahead.
+The waypoint-lookahead planner allowed us to take turns more smoothly and cut in on the corners. Below are two instances of the car taking a turn. The one on the left is without the lookahead, while the one on the right uses waypoint lookahead.
 
-[squiggly turn car]  [smooth turn car]
+No waypoint lookahead smoothing       |  Waypoint lookahead smoothing
+:-------------------------:|:-------------------------:
+![No smooth](videos/NoSmoothing.mp4) | ![Smooth](videos/Smoothing.mp4)
+
 
 We found that the performance of the lookahead planner was dependent on the speed of the car, the placement of the waypoints, and the shape of the turn. Thus, we do not know how well this planner will perform on an arbitrary track that we haven’t seen before. However, as seen above, given the opportunity to tune the speed of the car and the amount we look ahead, we can achieve very good turns.
 
-We submitted our car into the ROAR competition and won the Grand Prize for this year’s 2020 ROAR S1 series, reaching a max speed of 188 km/hr along a figure-eight shaped track. A video of our car running a single lap can be found below. There are some tight corners and some instances where the car slows down unnecessarily, but overall the racing portion performed quite well.
+We submitted our car to the ROAR competition and won the  [Grand Prize for this year’s 2020 ROAR S1 series](https://vivecenter.berkeley.edu/research1/roar/), reaching a max speed of 188 km/hr along a figure-eight shaped track. A video of our car running a single lap can be found below. There are some tight corners and some instances where the car slows down unnecessarily, but overall the racing portion performed quite well.
 
-[video of car running a single lap]
 
+![ROAR Race](videos/ROAR_race.mp4)
 
 ## Conclusion
 
@@ -126,7 +154,7 @@ I think one of our biggest difficulties was a lack of regular communication betw
 
 ## Team
 
-**Alfredo De Goyeneche.** 
+**Alfredo De Goyeneche.**  Alfredo is a first-year Ph.D. student at the EECS department in the Control, Intelligent Systems, and Robotics area, currently working with Prof. Miki Lustig in automation and biofeedback for MRI (Magnetic Resonance Imaging). He graduated in 2018 from Pontificia Universidad Catolica de Chile with a BS in electrical engineering. After that, he spent 2 years in a startup - HeartVista - as a Machine Learning Engineer working on \textit{self-driving MRIs}. For this project, he focused on the racing aspect. He designed and implemented the Smooth Waypoint Follower Planner, tuned the controllers and planning module for high speeds, coordinated the GitHub repository, and assisted in debugging aspects of other areas.
 
 **Alvin Tan.** Alvin is a first-year electrical engineering PhD student at UC Berkeley. He graduated from Northwestern University in 2020 with a BS in computer engineering, economics, and math, and is currently researching wireless sensor networks under Prof. Dutta in Lab11. For this project, he designed and implemented the LQR controller, helped other group members troubleshoot their work, and coordinated the progress of the overall project. 
 
@@ -138,3 +166,4 @@ I think one of our biggest difficulties was a lack of regular communication betw
 
 
 ## Additional materials
+
