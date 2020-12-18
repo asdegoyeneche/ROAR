@@ -45,7 +45,7 @@ Only using pre-recorded waypoints, the controller in the starter code is able to
 
 The controller receives the coordinates of the next waypoint and the desired speed from the path planner. From this, we found the *difference in speed* between our current speed and target speed and the *difference in angle* between our current trajectory and the next waypoint (see figure below), and selected steering and throttle values to correct any deviation.
 
-![Controller Knowledge](images/control_in.jpg)
+![Controller Knowledge](./images/control_in.jpg)
 
 The starter code came with two separate [PID controllers](https://en.wikipedia.org/wiki/PID_controller), but we found this difficult to tune due to the mental mismatch between the quantitative *K<sub>p</sub>, K<sub>i</sub>, K<sub>d</sub>* parameters and the qualitative desired behavior (e.g. “more sensitive steering”). Additionally, there was no coordination between steering and throttle, which resulted in very aggressive turns, and the PID controllers did not account for the drag of the car, which resulted in the car going ~10% slower than the target speed.
 
@@ -61,7 +61,7 @@ For the racing aspect, we optimized our route and speed based on previously acqu
 
 #### Lane Detection
 
-![Lane Detection](images/lane_detection.png)
+![Lane Detection](./images/lane_detection.png)
 
 The lane detector takes the images captured by the front RGB and depth camera as input and calculates the 3-D world coordinates of the left lane, right lane, and lane center in sight. At each time step, the procedure of lane detection algorithm is as follows:
 
@@ -103,7 +103,7 @@ target_speed *= max((math.cos(self.errBoi) - 1) * self.slowdown, -self.maxSlow) 
 
 Here, self.errBoi describes the error in the direction the car is going, self.slowdown is a multiplier to increase or decrease how much we slow down given a particular error in direction, and self.maxSlow is the maximum amount that we want to slow (just so we don’t come to a complete stop when we are very off-track). There’s a couple moving parts, so hopefully the graphical representation below is helpful. 
 
-![Reactive Speed Control](images/reactive_speed.jpg)
+![Reactive Speed Control](./images/reactive_speed.jpg)
 
 The LQR controller, on the other hand, is a bit more complicated. `ROAR/control_module/lqr_controller.py` contains the guts of our LQR controller, which uses the parameters stored in `ROAR_Sim/configurations/lqr_config.json`. Those who are familiar with LQR controllers can check out those files directly. For those unfamiliar with LQR controllers, we have written up an explanation of how an LQR controller works and how we built ours.
 
@@ -115,15 +115,15 @@ An LQR controller consists of two main components:
 
 The system dynamics is a linear model of how the system (a self-driving car) changes state (speed and direction of motion) based on its current state and external inputs (steering and throttle). This is the “linear” part of the linear quadratic regulator. The linear model used in our LQR controller is shown below. We used a discrete-time system, where each time step was 0.03 seconds (as determined by Carla magic). We will explain later how we got the numbers we use, but for now the important thing is we have an *A* and *B* matrix that describe the intrinsic physics of the car.
 
-![LQR System Dynamics](images/lqr_sys.jpg)
+![LQR System Dynamics](./images/lqr_sys.jpg)
 
 The costs are the knobs we can turn to change the qualitative behavior of our controller. There are two types of costs: cost of deviation and cost of actuation. The costs used in our first functional LQR controller are shown below. The cost of deviation is applied to the state *x* of the car (angle and speed) and the cost of actuation is applied to the inputs *u* to the car (steering and throttle). We see that we care a bit more about going in the right direction than going at the right speed (since the 0.02 cost in angle is more than the 0.01 cost in speed), and we are very gentle with the steering and throttle (relatively high cost of 2.5 for both steering and throttle).
 
-![LQR Costs](images/lqr_costs.jpg)
+![LQR Costs](./images/lqr_costs.jpg)
 
 To be more mathematically precise, these costs are multiplied by the squares of the states and inputs and summed together to form a cost function *J* as shown below. This is the “quadratic” part of the linear quadratic regulator. Our goal is now to select a sequence of inputs *u* (i.e. steering and throttle values) that minimizes this cost. (It’s also worth noting that we use an infinite time horizon for our LQR controller to simplify our calculations, but that doesn’t affect the behavior of the controller very much, so you don’t have to worry too much about that.)
 
-![LQR Cost Function](images/lqr_cost_function.png)
+![LQR Cost Function](./images/lqr_cost_function.png)
 
 To actually calculate the inputs that minimize our cost function, we solve this thing called a *discrete-time algebraic Riccati equation* using our *A*, *B*, *Q*, and *R* matrices, and use the resulting *P* matrix along with our system dynamics *A* and *B* to generate a linear feedback matrix *K* such that *u = -Kx* is the optimal control. This math is kind of gross and does not need to be understood in order to use the LQR, so we will not go into detail here. The code for this optimization is also very succinct (literally two lines) because it utilizes the SciPy library, but if you’d like to read those two lines and consider the depth of their meaning, check out the *_dlqr* method in `lqr_controller.py`.
 
@@ -184,7 +184,7 @@ And here's a side-by-side comparison, with no lane-keeping on the left, and lane
 
 No Lane Keeping        |  Lane Keeping
 :-------------------------:|:-------------------------:
-![no_lane](videos/no_lane.gif) | ![lane_following](videos/lane_following.gif)
+![no_lane](./videos/no_lane.gif) | ![lane_following](./videos/lane_following.gif)
 
 
 We found that it was difficult to keep track of lanes denoted by dashed lines because the dashes were short and spaced rather far apart. This problem was exacerbated during turns, where the dashed lines in a lane were not even aligned with each other, making it difficult to stay in our lane while turning at higher speeds.
@@ -198,7 +198,7 @@ The LQR controller performed notably better than the original PID controllers. B
 
 PID Controller         |  LQR Controller
 :-------------------------:|:-------------------------:
-![PID controller](videos/PID.gif) | ![LQR controller](videos/LQR.gif)
+![PID controller](./videos/PID.gif) | ![LQR controller](./videos/LQR.gif)
 
 
 ### Racing  <a name="results_racing"></a>
@@ -207,7 +207,7 @@ The waypoint-lookahead planner allowed us to take turns more smoothly and cut in
 
 No waypoint lookahead smoothing       |  Waypoint lookahead smoothing
 :-------------------------:|:-------------------------:
-![No smooth](videos/NoSmoothing.mp4) | ![Smooth](videos/Smoothing.mp4)
+![No smooth](./videos/NoSmoothing.mp4) | ![Smooth](./videos/Smoothing.mp4)
 
 
 We found that the performance of the lookahead planner was dependent on the speed of the car, the placement of the waypoints, and the shape of the turn. Thus, we do not know how well this planner will perform on an arbitrary track that we haven’t seen before. However, as seen above, given the opportunity to tune the speed of the car and the amount we look ahead, we can achieve very good turns.
