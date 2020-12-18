@@ -214,8 +214,7 @@ We found that the performance of the lookahead planner was dependent on the spee
 
 We submitted our car to the ROAR competition and won the  [Grand Prize for this year’s 2020 ROAR S1 series](https://vivecenter.berkeley.edu/research1/roar/), reaching a max speed of 188 km/hr along a figure-eight shaped track. A video of our car running a single lap can be found below. There are some tight corners and some instances where the car slows down unnecessarily, but overall the racing portion performed quite well.
 
-
-![ROAR Race](videos/ROAR_race.mp4)
+{% include youtubePlayer.html id="lcID30ySyOk" %}
 
 ## Conclusion  <a name="conclusion"></a>
 
