@@ -239,3 +239,4 @@ With additional time, we would have focused on merging obstacle detection with s
 
 ## Additional materials
 
+While working on this project, we sometimes ran into blockers and felt like giving up, but this [inspirational speech](https://www.youtube.com/watch?v=DLzxrzFCyOs) always got us back up on our feet! We hope it helps y'all out when you're having a tough time as well!
