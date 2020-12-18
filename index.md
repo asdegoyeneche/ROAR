@@ -179,8 +179,7 @@ Our car successfully detects and follows lanes at lower speeds (50 km/hr)! Below
 
 {% include youtubePlayer.html id="rZt_j8n-sSU" %}
 
-
-And here's a side-by-side comparison, with no lane-keeping on the left, and lane-keeping on the right.
+And here's a side-by-side comparison, with no lane-keeping on the left, and lane-keeping on the right. Notice the wild swerving when the car attempts to turn without any lane-keeping, and the lack thereof with the help of lane-keeping. 
 
 
 No Lane Keeping        |  Lane Keeping
@@ -195,7 +194,7 @@ We were also able to detect obstacles in front of the car, as seen below, but di
 [video or image of car detecting obstacles?]
 
 ### Controlling <a name="results_control"></a>
-The LQR controller performed notably better than the original PID controllers. Below we can see two instances of the car. The one on the left is using the PID controllers, while the one on the right is using the LQR controller. We tuned both controllers as well as we could.
+The LQR controller performed notably better than the original PID controllers. Below we can see two instances of the car. The one on the left is using the PID controllers, while the one on the right is using the LQR controller. Notice the behavior of the car after the turns in both GIFs - there is a substantial difference in the stability of the car, with the LQR controller providing much better performance than the PID controller. We tuned both controllers as well as we could.
 
 PID Controller         |  LQR Controller
 :-------------------------:|:-------------------------:
@@ -222,8 +221,9 @@ We submitted our car to the ROAR competition and won the  [Grand Prize for this 
 
 We successfully achieved most of our goals for this project! Our lane detection and obstacle detection are functional and we have implemented lane-keeping in our path planner. The LQR controller provides us with a smooth ride and our waypoint-lookahead planner is very suitable for racing at high speeds. It is unfortunate that we were unable to implement obstacle avoidance, but given our current work, our car can pick up a rider and drive to a desired drop-off location while following lanes! Granted, it will be running through red lights and demolishing pedestrians, but that just means it works best at, like, 3 am!
 
-I think one of our biggest difficulties was a lack of regular communication between our team members. Of course, there were design questions of what we wanted our project to do and how each person’s work fit into the whole, and there were technical challenges of how to actually implement what we want, but I feel that much of that could have been resolved more efficiently through a brainstorming session, or having two or three people troubleshooting a problem, or catching up more frequently on what each person has done and how that affects the parts of the project that other people are working on. Instead, after distributing tasks and submitting our proposal, our group didn’t meet up again (or even talk to each other) for the next five weeks. During that time, a couple of us started working on our tasks, got stuck, and gave up without asking the rest of the group for help. Other group members were busy with other coursework and research, and did not make any notable progress. By the time we finally met up again, there was only one and a half weeks left before the presentation and ROAR competition, and we only had two partially-functional components. After that, we started meeting more frequently, posting our progress and updates in our group chat, and brainstorming and troubleshooting with each other as necessary, which let us make tremendous progress during that last week and create a project worth presenting on and competing with, but I wonder how much more we could have done if we had just talked to each other earlier.
+One of our biggest difficulties was a lack of regular communication between our team members. Of course, there were design questions of what we wanted our project to do and how each person’s work fit into the whole, and there were technical challenges of how to actually implement what we want, but we feel that much of that could have been resolved more efficiently through a brainstorming session, or having two or three people troubleshooting a problem, or catching up more frequently on what each person has done and how that affects the parts of the project that other people are working on. Instead, after distributing tasks and submitting our proposal, our group didn’t meet up again (or even talk to each other) for the next five weeks. During that time, a couple of us started working on our tasks, got stuck, and gave up without asking the rest of the group for help. Other group members were busy with other coursework and research, and did not make any notable progress. By the time we finally met up again, there was only one and a half weeks left before the presentation and ROAR competition, and we only had two partially-functional components. After that, we started meeting more frequently, posting our progress and updates in our group chat, and brainstorming and troubleshooting with each other as necessary, which let us make tremendous progress during that last week and create a project worth presenting on and competing with, but I wonder how much more we could have done if we had just talked to each other earlier.
 
+With additional time, we would have focused on merging obstacle detection with some form of planning so that the car would be able to avoid obstacles such as other vehicles, the sides of the track, and barricades on the track. We also wanted to implement image segmentation using the RGB camera feed from the car, which would have allowed us to distinguish the track from all the other components of the feed, and optimize the car's speed using this additional signal along with our existing lane detection and waypoint planning algorithms.
 
 ## Team  <a name="team"></a>
 
@@ -231,7 +231,7 @@ I think one of our biggest difficulties was a lack of regular communication betw
 
 **Alvin Tan.** Alvin is a first-year electrical engineering PhD student at UC Berkeley. He graduated from Northwestern University in 2020 with a BS in computer engineering, economics, and math, and is currently researching wireless sensor networks with Prabal Dutta in Lab11. For this project, he designed and implemented the LQR controller, helped other group members troubleshoot their work, and coordinated the overall progress of the project and its deliverables. 
 
-**Aman Sidhant.** 
+**Aman Sidhant.** Aman is a senior undergraduate majoring in EECS. He has industry experience using computer vision at SAP Research. He has also worked more broadly with machine learning, deep learning, optimization, and control theory through coursework and projects, and thinks robots are cool. Aman primarily worked with Wesley on object detection as part of the perception module of this project. 
 
 **Sihao Chen.** Sihao is a Master of Engineering student in UC Berkeley EECS. He graduated from Northeastern University (China) in 2020 with a B.Eng. in software engineering. He is in the assistive mouse capstone project group supervised by Prof. Brian A. Barsky.  He led the perception part of this project, designed and implemented the lane detector and the lane following planner, and assisted with object detection.
 
