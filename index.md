@@ -84,12 +84,21 @@ After giving it some thought, we realized something obvious - the walls are alwa
 
 [insert image here - three masks side by side, and arrows pointing to respective parts of the input image]
 
-Once the masks are applied, we 
+Once the masks are applied, we use classical image segmentation and processsing techniques like converting the image to grayscale, applying gaussian blurring and thresholding, and drawing contours around objects of interest. We had to tune many of the parameters in the thresholding and contour functions, which was a series of fruitful experiments that improved our detection algorithm as well
 
 In summary, our algorithm has the following key steps
 
-- Convert the original RGB image to a grayscale image
-- Blur the image using a gaussian kernel so that the image is smoothened, and to counteract the effect of the moving camera of the car.
+__*Masking*__
+- Divide the image into three areas of interest - left, right, and center.
+- Apply bitwise masks on each of the areas of interest to segment the relevant parts of the image:
+    - Left and Right masks to detect walls
+    - Center mask to detect objects on the track
+- __*Process*__ both images and merge them together to detect obstacles
+    
+__Processing__
+- Convert the original RGB image to a grayscale image.
+- Blur the image using a gaussian kernel so that the image is smoothened, and to counteract the effect of the car's moving camera.
+- Apply adaptive thresholding on the blurred image
 
 
 ### Planning  <a name="impl_plan"></a>
