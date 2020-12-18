@@ -13,7 +13,7 @@ import numpy as np
 
 class SmoothWaypointFollowingLocalPlanner(SimpleWaypointFollowingLocalPlanner):
 
-    def next_waypoint_smooth_and_speed(self, smooth_factor=400, speed_lookahead=600) -> (Transform, float):
+    def next_waypoint_smooth_and_speed(self, smooth_factor=300, speed_lookahead=500) -> (Transform, float):
         # car_speed = np.linalg.norm(self.agent.vehicle.velocity.to_array()) * 3.6  # m/s to km/hr
         # lookahead_multiplier = car_speed / 170  # self.agent.agent_settings.target_speed
         #
@@ -64,7 +64,7 @@ class SmoothWaypointFollowingLocalPlanner(SimpleWaypointFollowingLocalPlanner):
             # print(speed_lookahead, len(self.way_points_queue))
             angle_difference = self._calculate_angle_error(self.way_points_queue[speed_lookahead])
             # Angle difference is between 0 and 180, but unlikely to be more than 90
-            speed_multiplier = max(0.6, (1.0 - 1.3 * angle_difference / np.pi))
+            speed_multiplier = max(0.6, (1.0 - 1.2 * angle_difference / np.pi))
             # speed_multiplier = np.exp(- 2.0 * angle_difference) * 0.5 + 0.5
             # speed_multiplier = max(0.5, (1.0 - angle_difference / np.pi) ** 1.5)
             # speed_multiplier = max(0.5, (2.0 - (1.0 + angle_difference) ** 2))

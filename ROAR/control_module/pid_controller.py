@@ -11,7 +11,7 @@ from ROAR.agent_module.agent import Agent
 from typing import Tuple
 import json
 from pathlib import Path
-
+from time import time
 
 class PIDController(Controller):
     def __init__(self, agent, steering_boundary: Tuple[float, float],
@@ -33,12 +33,13 @@ class PIDController(Controller):
         self.logger = logging.getLogger(__name__)
         #self.num_steps = 0
 
-    def run_in_series(self, next_waypoint: Transform, **kwargs) -> VehicleControl:
+    def run_in_series(self, next_waypoint: Transform, speed_multiplier=1.0, **kwargs) -> VehicleControl:
         steering, errBoi, posBoi, velBoi, way_dir = self.lat_pid_controller.run_in_series(next_waypoint=next_waypoint)
+        target_speed = self.max_speed * speed_multiplier
 
         # feed the error into the longitudinal controller order to slow down when off target
         throttle = self.long_pid_controller.run_in_series(next_waypoint=next_waypoint,
-                                                          target_speed=kwargs.get("target_speed", self.max_speed),
+                                                          target_speed=target_speed,
                                                           errBoi=np.abs(errBoi))
 
         '''
@@ -94,12 +95,12 @@ class LongPIDController(Controller):
         target_speed = min(self.max_speed, kwargs.get("target_speed", self.max_speed))
 
         # if we are very off track, update error to reflect that
-        if errBoi > self.errBoi:
-            self.errBoi = errBoi
-        else: # if we are getting back on track, gradually reduce our error 
-            self.errBoi = self.errBoi*(1-self.errAlpha) + errBoi*self.errAlpha
-        # reduce our target speed based on how far off target we are
-        target_speed *= (math.exp(-self.errBoi) - 1)/2 + 1
+        # if errBoi > self.errBoi:
+        #     self.errBoi = errBoi
+        # else: # if we are getting back on track, gradually reduce our error
+        #     self.errBoi = self.errBoi*(1-self.errAlpha) + errBoi*self.errAlpha
+        # # reduce our target speed based on how far off target we are
+        # target_speed *= (math.exp(-self.errBoi) - 1)/2 + 1
         
         current_speed = Vehicle.get_speed(self.agent.vehicle)
 
@@ -110,7 +111,7 @@ class LongPIDController(Controller):
 
         if len(self._error_buffer) >= 2:
             # print(self._error_buffer[-1], self._error_buffer[-2])
-            _de = (self._error_buffer[-2] - self._error_buffer[-1]) / self._dt
+            _de = (self._error_buffer[-1] - self._error_buffer[-2]) / self._dt
             _ie = sum(self._error_buffer) * self._dt
         else:
             _de = 0.0
@@ -132,21 +133,26 @@ class LatPIDController(Controller):
         self._error_buffer = deque(maxlen=10)
         self._dt = dt
 
+        self.prev_error = 0
+        self.prev_time = time()
+        self.integral_error = 0
+
     def run_in_series(self, next_waypoint: Transform, **kwargs) -> float:
         # calculate a vector that represent where you are going
+
         v_begin = self.agent.vehicle.transform.location
         v_end = v_begin + Location(
             x=math.cos(math.radians(self.agent.vehicle.transform.rotation.pitch)),
             y=v_begin.y,
             z=math.sin(math.radians(self.agent.vehicle.transform.rotation.pitch)),
         )
-        v_vec = np.array([v_end.x - v_begin.x, v_end.y - v_begin.y, v_end.z - v_begin.z])
+        v_vec = np.array([v_end.x - v_begin.x, 0, v_end.z - v_begin.z])
 
         # calculate error projection
         w_vec = np.array(
             [
                 next_waypoint.location.x - v_begin.x,
-                next_waypoint.location.y - v_begin.y,
+                0,
                 next_waypoint.location.z - v_begin.z,
             ]
         )
@@ -160,17 +166,30 @@ class LatPIDController(Controller):
         _cross = np.cross(v_vec, w_vec)
         if _cross[1] > 0:
             _dot *= -1.0
-        self._error_buffer.append(_dot)
-        if len(self._error_buffer) >= 2:
-            _de = (self._error_buffer[-1] - self._error_buffer[-2]) / self._dt
-            _ie = sum(self._error_buffer) * self._dt
-        else:
-            _de = 0.0
-            _ie = 0.0
+
+        _error = _dot
+        _time = time()
+        _dt = _time - self.prev_time
+        _de = (_error - self.prev_error) / _dt
+        self.integral_error += _error * _dt
+        self.integral_error = np.clip(self.integral_error, -0.2, 0.2)
+
+        self.prev_error = _error
+        self.prev_time = _time
+
+        # self._error_buffer.append(_dot)
+        # if len(self._error_buffer) >= 2:
+        #     _de = (self._error_buffer[-1] - self._error_buffer[-2]) / self._dt
+        #     _ie = sum(self._error_buffer) * self._dt
+        # else:
+        #     _de = 0.0
+        #     _ie = 0.0
 
         k_p, k_d, k_i = PIDController.find_k_values(config=self.config, vehicle=self.agent.vehicle)
 
         lat_control = float(
-            np.clip((k_p * _dot) + (k_d * _de) + (k_i * _ie), self.steering_boundary[0], self.steering_boundary[1])
+            np.clip((k_p * _error) + (k_d * _de) + (k_i * self.integral_error),
+                    self.steering_boundary[0], self.steering_boundary[1])
         )
+
         return lat_control, _dot, v_begin, v_vec, w_vec
