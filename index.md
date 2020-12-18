@@ -227,7 +227,7 @@ With additional time, we would have focused on merging obstacle detection with s
 
 **Sihao Chen.** Sihao is a Master of Engineering student in UC Berkeley EECS. He graduated from Northeastern University (China) in 2020 with a B.Eng. in software engineering. He is in the assistive mouse capstone project group supervised by Prof. Brian A. Barsky.  He led the perception part of this project, designed and implemented the lane detector and the lane following planner, and assisted with object detection.
 
-**Wesley Wang.** 
+**Wesley Wang.** Wesley is a senior undergraduate majoring in CS. He has a broad knowledge of computer science knowledge such as machine learning, optimization, and algorithms from classes taken at Berkeley. He primarily worked on object detection within the perception model with assistance from Aman. 
 
 
 ## Additional materials
