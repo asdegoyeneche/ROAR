@@ -177,7 +177,7 @@ Our car successfully detects and follows lanes at lower speeds (50 km/hr)! Below
 
 No Lane Keeping        |  Lane Keeping
 :-------------------------:|:-------------------------:
-![no_lane](./videos/no_lane.gif) | ![lane_following](./videos/lane_following.gif)
+![no_lane](./videos/nolane2.gif) | ![lane_following](./videos/lane2.gif)
 
 
 We found that it was difficult to keep track of lanes denoted by dashed lines because the dashes were short and spaced rather far apart. This problem was exacerbated during turns, where the dashed lines in a lane were not even aligned with each other, making it difficult to stay in our lane while turning at higher speeds.
