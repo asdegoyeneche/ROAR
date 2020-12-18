@@ -79,7 +79,7 @@ The lane detector takes in the images captured by the front RGB and depth camera
 
 #### Obstacle Detection
 
-The object detection algorithm uses the front RGB camera's image feed as its input, and at each time step, identifies any obstacles in the camera's field of view. For this track, examples of obstacles included other cars, walls on both sides of the track, and barricades.
+The obstacle detection algorithm uses the front RGB camera's image feed as its input, and at each time step, identifies any obstacles in the camera's field of view. For this track, examples of obstacles included other cars, walls on both sides of the track, and barricades.
 
 We initially tried to use the entire input image from the RGB camera as is. However, we quickly ran into problems with this approach because we couldn't figure out how to separate the processes to detect walls and other objects on the track, which resulted in our algorithm detecting walls and cars as one 'obstacle'.
 
@@ -269,11 +269,11 @@ With additional time, we would have focused on merging obstacle detection with s
 
 **Alvin Tan.** Alvin is a first-year electrical engineering PhD student at UC Berkeley. He graduated from Northwestern University in 2020 with a BS in computer engineering, economics, and math, and is currently researching wireless sensor networks with Prabal Dutta in Lab11. For this project, he designed and implemented the LQR controller, helped other group members troubleshoot their work, and coordinated the overall progress of the project and its deliverables. 
 
-**Aman Sidhant.** Aman is a senior undergraduate majoring in EECS. He has industry experience using computer vision at SAP Research. He has also worked more broadly with machine learning, deep learning, optimization, and control theory through coursework and projects, and thinks robots are cool. Aman primarily worked with Wesley on object detection as part of the perception module of this project. 
+**Aman Sidhant.** Aman is a senior undergraduate majoring in EECS. He has industry experience using computer vision at SAP Research. He has also worked more broadly with machine learning, deep learning, optimization, and control theory through coursework and projects, and thinks robots are cool. Aman primarily worked with Wesley on obstacle detection as part of the perception module of this project. 
 
-**Sihao Chen.** Sihao is a Master of Engineering student in UC Berkeley EECS. He graduated from Northeastern University (China) in 2020 with a B.Eng. in software engineering. He is in the assistive mouse capstone project group supervised by Prof. Brian A. Barsky.  He led the perception part of this project, designed and implemented the lane detector and the lane following planner, and assisted with object detection.
+**Sihao Chen.** Sihao is a Master of Engineering student in UC Berkeley EECS. He graduated from Northeastern University (China) in 2020 with a B.Eng. in software engineering. He is in the assistive mouse capstone project group supervised by Prof. Brian A. Barsky.  He led the perception part of this project, designed and implemented the lane detector and the lane following planner, and assisted with obstacle detection.
 
-**Wesley Wang.** Wesley is a senior undergraduate majoring in CS. He has a broad knowledge of computer science knowledge such as machine learning, optimization, and algorithms from classes taken at Berkeley. He primarily worked on object detection within the perception model with assistance from Aman. 
+**Wesley Wang.** Wesley is a senior undergraduate majoring in CS. He has a broad knowledge of computer science knowledge such as machine learning, optimization, and algorithms from classes taken at Berkeley. He primarily worked on obstacle detection within the perception model with assistance from Aman. 
 
 
 ## Additional Materials <a name="add_mats"></a>
