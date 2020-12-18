@@ -1,9 +1,9 @@
-# ROAR XD
+# ROAR: Robot Open Autonomous Racing
 
 This website describes the work that Alfredo, Alvin, Aman, Sihao, and Wesley did for their EECS 206A final project at UC Berkeley during Fall 2020.
 
 
-# Table of contents
+## Table of contents
 1. [Introduction](#introduction)
 1. [Design](#design)
     1. [Sensing and Planning](#design_sense_planning)
