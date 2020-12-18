@@ -56,7 +56,7 @@ The lane detector takes the images captured by the front RGB and depth camera as
 `lane_following_local_planner.py` contains the main logic of our lane following planner. We define a variable, confidence, which is a scalar between 0 and 1. It decays exponentially when a lane is not detected, and is reset to 1 when both are detected.  We calculate the target location based on a weighted sum of the mid point of lane center and the next waypoint. We also limit the target speed by confidence. The location of the next waypoint and target speed are then fed into our controller. The pseudocode of the lane following algorithm is as follows:
 
 ```python3
-def follow_lane(waypoints, α: confidence decay rate 0~1, β: speed limit factor >0):
+def follow_lane(waypoints, α: confidence decay rate 0 ~ 1, β: speed limit factor > 0):
     confidence = 1
     for each step:
         left_lane, right_lane, lane_center = detect_lanes_from_camera_input()
