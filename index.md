@@ -82,7 +82,7 @@ We initially tried to use the entire input image from the RGB camera as is. Howe
 
 After giving it some thought, we realized something obvious - the walls are always on the sides of track. To take advantage of this fact, we used three masks on every input image before processsing it further - left and right masks (to focus on detecting walls) and a middle mask (for obstacles directly on the track). This increased the accuracy of detection significantly.
 
-[insert image here - three masks side by side, and arrows pointing to respective parts of the input image]
+![Masking Approach](./images/maskScreenShot.png)
 
 Once the masks are applied, we use classical image segmentation and processsing techniques like converting the image to grayscale, applying gaussian blurring and thresholding, and drawing contours around objects of interest. We had to tune many of the parameters in the thresholding and contour functions, which was a series of fruitful experiments that improved our detection algorithm as well
 
@@ -100,6 +100,11 @@ __*Processing*__
 - Blur the image using a gaussian kernel so that the image is smoothened, and to counteract the effect of the car's moving camera.
 - Apply adaptive thresholding on the blurred image to distinguish between objects of interest and the background.  [Thanks Lab 6.](https://ucb-ee106.github.io/106a-fa20site/assets/labs/106A_Lab6_Fa20_REMOTE.pdf)
 - Find and draw rectangular contours to identify objects of interest.
+
+
+Camera Feed       |  Thresholding Applied
+:-------------------------:|:-------------------------:
+![Feed](./videos/plain-short-Trim.gif) | ![Thresholding](./videos/thresh-short-Trim.gif)
 
 
 ### Planning  <a name="impl_plan"></a>
@@ -245,7 +250,7 @@ We successfully achieved most of our goals for this project! Our lane detection 
 
 One of our biggest difficulties was a lack of regular communication between our team members. Of course, there were design questions of what we wanted our project to do and how each person’s work fit into the whole, and there were technical challenges of how to actually implement what we want, but we feel that much of that could have been resolved more efficiently through a brainstorming session, or having two or three people troubleshooting a problem, or catching up more frequently on what each person has done and how that affects the parts of the project that other people are working on. Instead, after distributing tasks and submitting our proposal, our group didn’t meet up again (or even talk to each other) for the next five weeks. During that time, a couple of us started working on our tasks, got stuck, and gave up without asking the rest of the group for help. Other group members were busy with other coursework and research, and did not make any notable progress. By the time we finally met up again, there was only one and a half weeks left before the presentation and ROAR competition, and we only had two partially-functional components. After that, we started meeting more frequently, posting our progress and updates in our group chat, and brainstorming and troubleshooting with each other as necessary, which let us make tremendous progress during that last week and create a project worth presenting on and competing with, but I wonder how much more we could have done if we had just talked to each other earlier.
 
-With additional time, we would have focused on merging obstacle detection with some form of planning so that the car would be able to avoid obstacles such as other vehicles, the sides of the track, and barricades on the track. We also wanted to implement image segmentation using the RGB camera feed from the car, which would have allowed us to distinguish the track from all the other components of the feed, and optimize the car's speed using this additional signal along with our existing lane detection and waypoint planning algorithms.
+With additional time, we would have focused on merging obstacle detection with some form of planning so that the car would be able to avoid obstacles such as other vehicles, the sides of the track, and barricades on the track. We also wanted to implement image segmentation using the RGB camera feed from the car, which would have allowed us to distinguish the track from all the other components of the feed, and optimize the car's speed using this additional signal along with our existing lane detection and waypoint planning algorithms. Since we already used a masking approach to differentiate different regions of the image, this would have been quite possible.
 
 ## Team  <a name="team"></a>
 
