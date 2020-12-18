@@ -4,7 +4,7 @@
     "transform": {
       "location": {
         "x": 1.6,
-        "y": 1.7,
+        "y": 2.0,
         "z": 0.0
       },
       "rotation": {
@@ -21,7 +21,7 @@
     "transform": {
       "location": {
         "x": 1.6,
-        "y": 1.7,
+        "y": 2.0,
         "z": 0.0
       },
       "rotation": {
@@ -59,7 +59,7 @@
   "spawn_point_id": 1,
   "show_sensors_data": true,
   "save_sensor_data": false,
-  "max_speed": 150,
+  "max_speed": 100,
   "target_speed": 150
 }
 

@@ -26,6 +26,7 @@ class LQRAgent(Agent):
         # initiated right after mission plan
 
         self.behavior_planner = BehaviorPlanner(agent=self)
+        #self.local_planner = SmoothWaypointFollowingLocalPlanner(
         self.local_planner = LaneFollowingLocalPlanner(
         #self.local_planner = SimpleWaypointFollowingLocalPlanner(
             agent=self,

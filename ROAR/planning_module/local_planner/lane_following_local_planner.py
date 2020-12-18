@@ -61,7 +61,7 @@ class LaneFollowingLocalPlanner(SmoothWaypointFollowingLocalPlanner):
         lane_detector: LaneDetector = self.agent.lane_detector
         lane_center = lane_detector.lane_center
         next_location = Location.from_array(
-            lane_center[0]*0.2+lane_center[1]*0.8) + vehicle_transform.location*0
+            lane_center[0]*0.8+lane_center[1]*0.2) + vehicle_transform.location*0
         # next_pitch = two_points_to_pitch(lane_center[0], lane_center[1])
         # next_rotation = Rotation(yaw=vehicle_transform.rotation.yaw,
         #                          pitch=math.degrees(next_pitch),
@@ -88,8 +88,8 @@ class LaneFollowingLocalPlanner(SmoothWaypointFollowingLocalPlanner):
                 break
         target_waypoint_waypoint, speed_factor = self.next_waypoint_smooth_and_speed()
         #target_waypoint_waypoint = self.way_points_queue[0]
-        target_waypoint = target_waypoint_lane * min(0.5,lane_detector.confidence) + \
-            target_waypoint_waypoint * max(1-lane_detector.confidence,0.5)
+        target_waypoint = target_waypoint_lane * min(0.8,lane_detector.confidence) + \
+            target_waypoint_waypoint * max(1-lane_detector.confidence,0.2)
         speed_factor = max(0.5,
                            1/math.exp(abs(lane_detector.dist_to_lane_center_integrate)*.3 +
                                       abs(lane_detector.dist_to_lane_center)*0.0 +
