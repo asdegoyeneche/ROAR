@@ -73,13 +73,13 @@ The lane detector takes in the images captured by the front RGB and depth camera
 - convert the original RGB image to a grayscale image,
 - calculate the canny edges of the image,
 - cut out two triangle-shaped areas of interest, one on the left bottom part of the image, another on the right bottom part,
-- calculate rough lines from each image and take their average to form two straight lines as our detected lanes,
+- calculate Hough lines from each image and take their average to form two straight lines as our detected lanes,
 - calculate world coordinates of lanes using depth camera image, and
 - use the average of world coordinates of the left and right lanes as the lane center for path planning.
 
 #### Obstacle Detection
 
-The obstacle detection algorithm uses the front RGB camera's image feed as its input and identifies any obstacles in the camera's field of view at each time step. Examples of obstacles includ other cars, the walls on both sides of the track, and barricades in the middle of the road.
+The obstacle detection algorithm uses the front RGB camera's image feed as its input and identifies any obstacles in the camera's field of view at each time step. Examples of obstacles include other cars, the walls on both sides of the track, and barricades in the middle of the road.
 
 We initially tried to use the entire input image from the RGB camera as is. However, we quickly ran into problems with this approach because we couldn't figure out how to separate the processes to detect walls and other objects on the track, which resulted in our algorithm detecting walls and cars as one 'obstacle'.
 
