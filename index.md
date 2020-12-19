@@ -3,6 +3,9 @@
 This website was written by Alfredo, Alvin, Aman, Sihao, and Wesley, and describes what they did for their EECS 106A/206A final project at UC Berkeley during Fall 2020.
 
 
+![ROAR PIC](./images/ROAR.png)
+
+
 ## Table of contents
 1. [Introduction](#introduction)
 1. [Design](#design)
