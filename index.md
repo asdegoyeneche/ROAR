@@ -40,13 +40,13 @@ With these goals in mind, we split our tasks into four parts -- sensing, plannin
 
 ### Sensing and Planning  <a name="design_sense_planning"></a>
 
-The starter code directly used the pre-recorded waypoints as its "path planner" and was able to run a loop without the assistance of perception. However, there were some zig-zags in the path due to the poor quality of the waypoints. In order to overcome this, we optimized the path by having the car follow the lane center and avoid objects. We used a front RGB camera to detect white and yellow lane segments in front of the car and a front depth camera to calculate their 3-D coordinates. Instead of just following lanes, which sometimes cannot be detected, we used lanes as an augmentation to “correct” improper waypoints. That is, the input of the controller was decided by a combination of lane center and pre-recorded waypoints. This design allowed us to generate a smooth path when lanes were visible and follow the waypoints when lanes were not visible.
+The starter code directly used the pre-recorded waypoints as its "path planner" and was able to run a loop without the assistance of perception. However, there were some zig-zags in the path due to the poor quality of the waypoints. In order to overcome this, we optimized the path by having the car follow the lane center. We used a front RGB camera to detect white and yellow lane segments in front of the car and a front depth camera to calculate their 3-D coordinates. Instead of just following lanes, which sometimes cannot be detected, we used lanes as an augmentation to “correct” improper waypoints. That is, the input of the controller was decided by a combination of lane center and pre-recorded waypoints. This design allowed us to generate a smooth path when lanes were visible and follow the waypoints when lanes were not visible.
 
-We also decided to use the front RGB camera's image feed to detect obstacles in the car's way, such as an NPC car on the track, or the walls on the sides on the track. We could then use these signals to plan the car's immediate route so as to avoid these obstacles. For instance, if the camera shows a group of cars in front, the car would automatically course correct and find a path that takes it around or between the other cars.
+We also decided to use the front RGB camera's image feed to detect obstacles in the car's way, such as an NPC car on the track, or the walls on the sides on the track. We could then use these signals to plan the car's immediate route so as to avoid these obstacles. For instance, if the camera showed a group of cars in front, the car could automatically find a path that takes it around or between the other cars and follow it.
 
 ### Controlling <a name="design_control"></a>
 
-The controller receives the coordinates of the next waypoint and the desired speed from the path planner. Using this information, the controller found the *difference in speed* between our current speed and target speed and the *difference in angle* between our current trajectory and the next waypoint (see figure below), and selected steering and throttle values to correct any deviation.
+The controller receives the coordinates of the next waypoint and the desired speed from the path planner. Using this information, the controller can find the *difference in speed* between our current speed and target speed and the *difference in angle* between our current trajectory and the next waypoint (see figure below), and select steering and throttle values to correct any deviation.
 
 ![Controller Knowledge](./images/control_in.jpg)
 
@@ -54,11 +54,11 @@ The starter code came with two separate [PID controllers](https://en.wikipedia.o
 
 To correct these issues, we made two notable changes:  
 1. We added reactive speed control, which reduced the target speed when there was a large error in direction. This allowed us to slow down as we turned and resulted in smoother turns and better recovery when off-track with a small trade-off in speed.  
-1. We designed and implemented an [LQR controller](https://en.wikipedia.org/wiki/Linear%E2%80%93quadratic_regulator) to use instead of the PID controllers. This enabled the controller to account for the car’s dynamics (e.g. drag) when selecting steering and throttle values, which resulted in more accurate adherence to the planned path. The parameters used in the LQR were also more intuitive to tune than the parameters in the PID. For instance, if the car was veering back and forth from over-steering, we could increase the *cost* of steering in the LQR controller, and the controller would steer less aggressively. This ease of tuning allowed us to get significantly better performance and reach higher speeds when compared to the PID controllers. However, although the LQR had better performance than the PID, it was also significantly more complex. We had to spend a lot of time determining the system dynamics of the car and finagling the LQR math to converge to a non-zero desired trajectory. The grimy details of the LQR controller can be found in its [implementation section](#impl_control).
+1. We designed and implemented an [LQR controller](https://en.wikipedia.org/wiki/Linear%E2%80%93quadratic_regulator) to use instead of the PID controllers. This enabled the controller to account for the car’s dynamics (e.g. drag) when selecting steering and throttle values, which resulted in more accurate adherence to the planned path. The parameters used in the LQR were also more intuitive to tune than the parameters in the PID. For instance, if the car was veering back and forth from over-steering, we could increase the *cost* of steering in the LQR controller, and the controller would steer less aggressively. This ease of tuning allowed us to get significantly better performance and reach higher speeds when compared to the PID controllers. However, although the LQR had better performance than the PID, it was also significantly more complex. We had to spend a lot of time determining the system dynamics of the car and finagling the LQR math to converge to a non-zero desired trajectory. The grimy details of the LQR controller can be found in its [implementation section](#impl_lqr).
 
 ### Racing <a name="design_racing"></a>
 
-For the racing aspect, we optimized our route and speed based on previously acquired track waypoints. These waypoints can be acquired at lower speeds with other sensing and planning strategies such as our lane following module. We optimized our controllers for high speeds and implemented a waypoint smoothing and look-ahead algorithm to take turns more smoothly, cut in on the corners, and adjust the speed accordingly. 
+For the racing aspect, we optimized our route and speed based on the given waypoints. We optimized our controllers for high speeds and implemented a waypoint smoothing and look-ahead algorithm to take turns more smoothly, cut in on the corners, and adjust the speed accordingly. 
 
 ## Implementation <a name="implementation"></a>
 
@@ -70,16 +70,16 @@ For the racing aspect, we optimized our route and speed based on previously acqu
 
 The lane detector takes in the images captured by the front RGB and depth cameras as input and calculates the 3-D world coordinates of the left lane, right lane, and lane center. At each time step, the lane detection algorithm does the following:
 
-- Convert the original RGB image to a grayscale image,
-- Calculate the canny edges of the image,
-- Cut out two triangle-shaped areas of interest, one on the left bottom part of the image, another on the right bottom part,
-- Calculate hough lines from each image and take their average to form two straight lines as our detected lanes,
-- Calculate world coordinates of lanes using depth camera image, and
-- Use the average of world coordinates of the left and right lanes as the lane center for path planning.
+- convert the original RGB image to a grayscale image,
+- calculate the canny edges of the image,
+- cut out two triangle-shaped areas of interest, one on the left bottom part of the image, another on the right bottom part,
+- calculate rough lines from each image and take their average to form two straight lines as our detected lanes,
+- calculate world coordinates of lanes using depth camera image, and
+- use the average of world coordinates of the left and right lanes as the lane center for path planning.
 
 #### Obstacle Detection
 
-The obstacle detection algorithm uses the front RGB camera's image feed as its input, and at each time step, identifies any obstacles in the camera's field of view. For this track, examples of obstacles included other cars, walls on both sides of the track, and barricades.
+The obstacle detection algorithm uses the front RGB camera's image feed as its input and identifies any obstacles in the camera's field of view at each time step. Examples of obstacles includ other cars, the walls on both sides of the track, and barricades in the middle of the road.
 
 We initially tried to use the entire input image from the RGB camera as is. However, we quickly ran into problems with this approach because we couldn't figure out how to separate the processes to detect walls and other objects on the track, which resulted in our algorithm detecting walls and cars as one 'obstacle'.
 
@@ -87,9 +87,9 @@ After giving it some thought, we realized something obvious - the walls are alwa
 
 ![Masking Approach](./images/maskScreenShot.png)
 
-Once the masks are applied, we use classical image segmentation and processsing techniques like converting the image to grayscale, applying gaussian blurring and thresholding, and drawing contours around objects of interest. We had to tune many of the parameters in the thresholding and contour functions, which was a series of fruitful experiments that improved our detection algorithm as well
+Once the masks were applied, we used classical image segmentation and processsing techniques like converting the image to grayscale, applying gaussian blurring and thresholding, and drawing contours around objects of interest. We had to tune many of the parameters in the thresholding and contour functions, which was a series of fruitful experiments that improved our detection algorithm as well.
 
-In summary, our algorithm has the following key steps
+In summary, our algorithm has the following key steps:
 
 __*Masking*__
 - Divide the image into three areas of interest - left, right, and center.
@@ -114,7 +114,7 @@ Camera Feed       |  Thresholding Applied
 
 #### Lane Following
 
-`ROAR/planning_module/local_planner/lane_following_local_planner.py` contains the main logic of our lane following planner. We defined a variable, confidence, which is a scalar between 0 and 1. It decays exponentially when a lane is not detected, and is reset to 1 when both are detected.  We calculated the target location based on a weighted sum of the mid point of lane center and the next waypoint. We also limited the target speed by confidence. The location of the next waypoint and target speed were then fed into our controller. The pseudocode of the lane following algorithm is as follows:
+The `ROAR/planning_module/local_planner/lane_following_local_planner.py` script contains the main logic of our lane following planner. We defined a variable, confidence, which is a scalar between 0 and 1. It decays exponentially when a lane is not detected, and is reset to 1 when both are detected.  We calculated the target location based on a weighted sum of the mid point of lane center and the next waypoint. We also limited the target speed by confidence. The location of the next waypoint and target speed were then fed into our controller. The pseudocode of the lane following algorithm is as follows:
 
 ```python3
 def follow_lane(waypoints, α: confidence decay rate 0 ~ 1, β: speed limit factor > 0):
@@ -133,7 +133,7 @@ def follow_lane(waypoints, α: confidence decay rate 0 ~ 1, β: speed limit fact
 
 ### Controlling <a name="impl_control"></a>
 
-We made two additions to the controller: reactive speed control and LQR maths,
+We made two additions to the controller: reactive speed control and LQR maths.
 
 #### Reactive speed control
 
@@ -143,13 +143,13 @@ The reactive speed control is a straightforward concept that boils down to one l
 target_speed *= max((math.cos(self.errBoi) - 1) * self.slowdown, -self.maxSlow) + 1
 ```
 
-Here, self.errBoi describes the error in the direction the car is going, self.slowdown is a multiplier to increase or decrease how much we slow down given a particular error in direction, and self.maxSlow is the maximum amount that we want to slow (just so we don’t come to a complete stop when we are very off-track). These three variables were all defined in the configuration file `ROAR_Sim/configurations/lqr_config.json`. There’s a couple moving parts, so hopefully the graphical representation below is helpful. 
+Here, self.errBoi describes the error in the direction the car is going, self.slowdown is a multiplier to increase or decrease how much we slow down given a particular error in direction, and self.maxSlow is the maximum amount that we want to slow (just so we don’t come to a complete stop when we are very off-track). These three variables are all defined in the `ROAR_Sim/configurations/lqr_config.json` configuration file. There are a couple moving parts, so hopefully the graphical representation below is helpful. 
 
 ![Reactive Speed Control](./images/reactive_speed.jpg)
 
-#### LQR maths
+#### LQR maths <a name="impl_lqr"></a>
 
-The LQR controller, on the other hand, is a bit more complicated. The `lqr_controller.py` script contains the guts of our LQR controller, which uses the parameters stored in `lqr_config.json` configuration file. Those who are familiar with LQR controllers can check out those files directly. For those unfamiliar with LQR controllers, we have written up an explanation of how an LQR controller works and how we built ours.
+The LQR controller, on the other hand, is a bit more complicated. The `lqr_controller.py` script contains the guts of our LQR controller, which uses the parameters stored in the `lqr_config.json` file. Those who are familiar with LQR controllers can check out those files directly. For those unfamiliar with LQR controllers, we have written up an explanation of how an LQR controller works and how we built ours.
 
 ##### LQR controller basics
 
@@ -161,40 +161,38 @@ The system dynamics is a linear model of how the system (i.e. a self-driving car
 
 ![LQR System Dynamics](./images/lqr_sys.jpg)
 
-Next up are the costs. The costs are the knobs we can turn to change the qualitative behavior of our controller. There are two types of costs: cost of deviation and cost of actuation. The costs matrices *Q* and *R* used in our first functional LQR controller are shown below. The cost of deviation is applied to the state *x* of the car (angle and speed) and the cost of actuation is applied to the inputs *u* to the car (steering and throttle). We can see that we care a bit more about going in the right direction than going at the right speed (since the 0.02 cost of angle is more than the 0.01 cost of speed), and we are very gentle with the steering and throttle (given the relatively high cost of 2.5 for both steering and throttle).
+Next up are the costs. The costs are the knobs we can turn to change the qualitative behavior of our controller. There are two types of costs: cost of deviation *Q* and cost of actuation *R*. The costs matrices used in our first functional LQR controller are shown below. The cost of deviation is applied to the state *x* of the car (angle and speed) and the cost of actuation is applied to the inputs *u* to the car (steering and throttle). By inspecting these matrices, we can see that we care a bit more about going in the right direction than going at the right speed (since the 0.02 cost of angle is more than the 0.01 cost of speed), and we are very gentle with the steering and throttle (given the relatively high cost of 2.5 for both steering and throttle).
 
 ![LQR Costs](./images/lqr_costs.jpg)
 
-To be more mathy, these costs are used to form a cost function *J*, shown below. We see in *J* that the costs are multiplied by the squares of the states and inputs and summed up over an infinite time horizon. This is the “quadratic” part of the linear quadratic regulator. Our goal is now to select a sequence of inputs *u* (i.e. steering and throttle values) that minimizes this cost.
+To be more mathy, these costs are used to form a cost function *J*, shown below. We see in *J* that the costs are multiplied by the states and inputs squared and summed up over an infinite time horizon. This is the “quadratic” part of the linear quadratic regulator. Our goal now is to select a sequence of inputs *u* (i.e. steering and throttle values) that minimizes this cost.
 
 ![LQR Cost Function](./images/lqr_cost_function.png)
 
-To calculate the inputs that minimize our cost function, we solve this thing called a *discrete-time algebraic Riccati equation* using our *A*, *B*, *Q*, and *R* matrices to get some *P* matrix, and use that *P* matrix along with our system dynamics *A* and *B* to generate a linear feedback matrix *K* such that *u = -Kx* is the optimal input at each time step. This math is kind of gross and does not need to be understood in order to use the LQR, so we will not go into detail here. The code for this optimization is also very succinct (literally two lines because it utilizes the SciPy library), but if you’d like to read those two lines and consider the depth of their meaning, check out the *_dlqr* method in `lqr_controller.py`. The upshot is that by minimizing *J* with a little math, we can control the car very efficiently.
+To calculate the inputs that minimize our cost function, we solve this thing called a *discrete-time algebraic Riccati equation* using our *A*, *B*, *Q*, and *R* matrices to get some *P* matrix, and use that *P* matrix along with our system dynamics *A* and *B* to generate a linear feedback matrix *K* such that *u = -Kx* is the optimal input at each time step. This math is kind of gross and does not need to be understood in order to use the LQR, so we will not go into detail here. The code for this optimization is also very succinct (literally two lines because it utilizes the SciPy library), but if you’d like to read those two lines and consider the depth of their meaning, check out the *_dlqr* method in `lqr_controller.py`. The upshot is that by minimizing *J* with LQR math, we get steering and throttle values that can control the car very effectively.
 
-“Wait a second,” you say, “I’m a bit confused about something. If the cost of deviation is multiplied by the square of the state, doesn’t that mean by minimizing the costs, we drive the state to zero? That means that the LQR controller just makes the car face a certain direction and while going 0 km/hr! Doesn’t seem very race-worthy to me.” And you are completely correct! An LQR naturally pushes everything (including the speed of the car) to zero, which is the “regulator” part of the linear quadratic regulator. In order to follow a desired trajectory and use the LQR as a controller, we need to change where “zero” is. For the direction the car goes in, this is reasonably straightforward -- zero is just the direction to the next waypoint. Speed is a bit more tricky, because the drag of the car is proportional to the speed, so the amount of throttle needed to maintain a particular speed changes depending on said speed. For our LQR controller, we calculate the desired throttle needed to maintain the desired speed, find the difference between our current speed and the desired speed, and run the LQR on that difference to drive it to zero. We then add the throttle value the LQR spits back out to the desired throttle we found earlier and use the sum as our next input. In equilibrium, this results in the car going in the desired direction at the desired speed. This is all implemented in `lqr_controller.py`, so take a look at that if you are interested in the actual code.
+“Wait a second,” you say, “I’m a bit confused about something. If the cost of deviation is multiplied by the square of the state, doesn’t that mean by minimizing the costs, we drive the state to zero? That means that the LQR controller just makes the car face a certain direction and while going 0 km/hr! Doesn’t seem very race-worthy to me.” And you are completely correct! An LQR naturally pushes everything (including the speed of the car) to zero, which is the “regulator” part of the linear quadratic regulator. In order to follow a desired trajectory and use the LQR as a controller, we need to change where “zero” is. For the direction the car goes in, this is reasonably straightforward -- zero is just the direction to the next waypoint. Speed is a bit more tricky, because the drag of the car is proportional to the speed, so the amount of throttle needed to maintain a particular speed changes depending on said speed. For our LQR controller, we calculate the desired throttle needed to maintain the desired speed, find the difference between our current speed and the desired speed, and run the LQR on that difference in speed to drive it to zero. We then add the throttle value the LQR spits back out to the desired throttle we found earlier and use that sum as our next input. In equilibrium, this results in the car going in the desired direction at the desired speed. This is all implemented in `lqr_controller.py`, so take a look at that if you are interested in the actual code.
 
-That's it! Now you kind of know how an LQR controller works! “But wait,” you say, “You're absolutely fantastic at explaining things and everything makes perfect sense, but where did the numbers in those *A*, *B*, *Q*, and *R* matrices come from? How would I come up with them myself?” Glad you asked!
+That's it! Now you kind of know how an LQR controller works! “But wait,” you say, “you're absolutely fantastic at explaining things and everything makes perfect sense, but where did the numbers in those *A*, *B*, *Q*, and *R* matrices come from? How would I come up with them myself?” Glad you asked!
 
 #### A, B, Q, and R matrices
 
-Let's start with the system dynamics *A* and *B* since they were by far the most difficult to determine. Before we could even think about the matrices themselves, we had to decide what state variables to include in our linear model (e.g. position, velocity, acceleration, jerk, direction, angular velocity, angular acceleration, roll, pitch, yaw, derivatives of roll, pitch, yaw, etc, etc, etc) based on what linear relations (if any) existed between them and each other and what linear effects the inputs had on them. To explore this, we recorded the position, velocity, and orientation of the car, the position of the next waypoint, and the inputs to the car as it drove around the track using the tuned PID controllers. These datafiles (along with the Jupyter Notebooks used to explore the data) can be found in the [carla_driving_data directory](https://github.com/asdegoyeneche/ROAR/tree/master/carla_driving_data) of our GitHub repository.
+Let's start with the system dynamics *A* and *B* since they were by far the most difficult to determine. Before we can even think about the matrices themselves, we have to decide what state variables to include in our linear model (e.g. position, velocity, acceleration, jerk, direction, angular velocity, angular acceleration, roll, pitch, yaw, derivatives of roll, pitch, yaw, etc, etc, etc) based on what linear relations (if any) exists between them and each other and what linear effects the inputs have on them. To explore this, we recorded the position, velocity, and orientation of the car, the position of the next waypoint, and the inputs to the car as it drove around the track using the tuned PID controllers. These datafiles (along with the Jupyter Notebooks used to explore the data) can be found in the [carla_driving_data directory](https://github.com/asdegoyeneche/ROAR/tree/master/carla_driving_data) of our GitHub repository.
 
 Once we collected this data, we tossed it into a Jupyter Notebook and graphed the candidate state variables pairwise against each other and against the inputs to identify any linear trends. We initially selected direction, angular velocity, speed, and acceleration as our state variables and ran some linear regressions to get rough estimates of what the numbers should be in the *A* and *B* matrices. We then constructed our *A* and *B* matrices from those regressions, arbitrarily instantiated some *Q* and *R* matrices with positive values along the diagonal, and finagled the LQR math so that we could follow a desired trajectory based on simulated system behavior.
 
-After the math behind our LQR controller was working, we implemented a Carla agent and controller for the LQR and tossed our matrix values into a configuration file. Then we ran a lot of trials to refine the values in our *A* and *B* matrices. We ended up simplifying the system dynamics to only include two state variables, and we tuned the drag of the car and the effects of steering and throttle until the car reached equilibrium at the target speed and didn’t seem to over/undercorrect when steering. After much eyeballing, we threw our hands up and said, “Good enough!” and thus our *A* and *B* matrices were born.
+After the math behind our LQR controller was working, we implemented a Carla agent and controller for the LQR and tossed our matrix values into a configuration file. Then we ran a lot of trials to refine the values in our *A* and *B* matrices. We ended up simplifying the system dynamics to include only two state variables, and we tuned the drag of the car and the effects of steering and throttle until the car reached equilibrium at the target speed and didn’t seem to over/undercorrect when steering. After much eyeballing, we threw our hands up and said, “Good enough!” and thus our *A* and *B* matrices were born.
 
 Finally, all that was left to do was to tune our *Q* and *R* matrices until the car did what we wanted it to do. Our initial values in *Q* and *R* were grossly suboptimal, but through some experimentation, we found that decreasing the values in *Q* and *R* by a couple orders of magnitude resulted in finer adjustments of the steering and throttle, and keeping cost of actuation relatively high resulted in a smooth ride as desired. Once the car made a smooth lap around the track, we smiled, pushed the code to the repo, and went to bed -- our LQR controller's big debut at 4am some random Thursday morning.
 
-As we increased the speed of the car and tried different path planning methods, we would tune the costs of the LQR controller to get the behavior we want. We generally wanted the car to be decently reactive to changes in direction but not so much so that it would wobble all over the track. Fortunately, the LQR controller is pretty robust to different driving and planning conditions, but some fine-tuning definitely improves its performance around the tricky turns.
-
-It’s worth mentioning again that although tuning the costs of an LQR controller (after establishing system dynamics) seems like a lot of trial and error, it is still a lot easier than tuning a PID controller. If the car is wobbling back and forth too much, increase the cost of steering. If the car doesn’t turn fast enough, decrease the cost of steering. Very intuitive.
+As we increased the speed of the car and tried different path planning methods, we tuned the costs of the LQR controller to get the behavior we want. Generally, we want the car to be decently reactive to changes in direction but not so much so that it would wobble all over the track. Fortunately, the LQR controller is pretty robust to different driving and planning conditions, but some fine-tuning definitely improves its performance around the tricky turns.
 
 
 ### Racing <a name="impl_racing"></a>
 
 #### Smooth Waypoint Following Planner
 
-`ROAR/planning_module/local_planner/smooth_waypoint_following_local_planner.py` contains the main logic for our smooth waypoint lookahead path planner. From our waypoints, we look ahead `smooth_factor` number of waypoints for path smoothing and `speed_lookahead` number of waypoints to define our target speed factor. The target waypoint provided to the controller is obtained by averaging the next `smooth_factor` waypoints. However, this can be quite computationally expensive, so we uniformly sample some of the waypoints to use in calculations. Then, for our proactive speed control, we compute the angle between our car’s current orientation and the position of the waypoint `speed_lookahead` steps ahead. When this angle increases, we know we are nearing a turn. Finally, our target speed for our controller is multiplied by a factor that is decreases linearly when as this angle increases, letting us slow down before the turn. The pseudocode is as follows:
+The `ROAR/planning_module/local_planner/smooth_waypoint_following_local_planner.py` script contains the main logic for our smooth waypoint lookahead path planner. From our waypoints, we look ahead `smooth_factor` number of waypoints for path smoothing and `speed_lookahead` number of waypoints to define our target speed factor. The target waypoint provided to the controller is obtained by averaging the next `smooth_factor` waypoints. However, this can be quite computationally expensive, so we uniformly sample some of the waypoints to use in calculations. Then, for our proactive speed control, we compute the angle between our car’s current orientation and the position of the waypoint `speed_lookahead` steps ahead. When this angle increases, we know we are nearing a turn. Finally, our target speed for our controller is multiplied by a factor that is decreases linearly when as this angle increases, letting us slow down before the turn. The pseudocode is as follows:
 
 ```python3
 def next_waypoint_smooth_and_speed(self, smooth_factor: int, speed_lookahead:int ) -> (Transform, float):
@@ -211,24 +209,24 @@ def next_waypoint_smooth_and_speed(self, smooth_factor: int, speed_lookahead:int
     return target_waypoint, speed_multiplier
 ```
 
-The returned values are passed into the controller `run_in_series` method.
+The resulting waypoint and speed are then passed into the LQR controller for execution.
 
 ## Results  <a name="results"></a>
 
-Now we get to show our fun little videos of the car driving!
+Here we get to show our fun little videos of the car driving!
 
 ### Sensing and Planning  <a name="results_sense_plan"></a>
 
-Our car successfully detects and follows lanes at lower speeds (~50 km/hr). Below is a side-by-side comparison  with no lane-keeping on the left and lane-keeping on the right. The one of the left directly follows the waypoints while the one on the right includes lane-keeping. Notice the wild swerving when the car attempts to turn without any lane-keeping, and the lack thereof with the help of lane-keeping. 
+Our car successfully detects and follows lanes at lower speeds (~50 km/hr). Below is a side-by-side comparison of two cars using the same (somewhat sensitive) LQR parameters. The one of the left directly follows the waypoints while the one on the right includes lane-keeping. Notice the wild swerving when the car attempts to turn without any lane-keeping, and the lack thereof with the help of lane-keeping. 
 
 No Lane Keeping        |  Lane Keeping
 :-------------------------:|:-------------------------:
 ![no_lane](./videos/nolane2.gif) | ![lane_following](./videos/lane2.gif)
 
 
-We found that it was difficult to keep track of lanes denoted by dashed lines because the dashes were short and spaced rather far apart. This problem was exacerbated during turns, where the dashed lines in a lane were not even aligned with each other, making it difficult to stay in our lane while turning at higher speeds.
+We found that it was difficult to keep track of lanes denoted by dashed lines because the dashes seen by the camera were short and spaced rather far apart. This problem was exacerbated during turns, where the dashed lines in a lane were not even aligned with each other, making it difficult to stay in our lane while turning at higher speeds.
 
-Additionally, we were able to detect obstacles in front of the car, as seen below. However, we couldn't combine it with a planning algorithm to fully perform obstacle avoidance.
+We were also able to detect obstacles in front of the car, as seen below. However, we were unable to implement a path planning algorithm for obstacle avoidance due to lack of time.
 
 {% include youtubePlayer.html id="2DqhY0IRHjY" %}
 
