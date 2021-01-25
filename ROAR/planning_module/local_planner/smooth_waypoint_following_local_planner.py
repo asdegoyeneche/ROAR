@@ -17,7 +17,8 @@ class SmoothWaypointFollowingLocalPlanner(SimpleWaypointFollowingLocalPlanner):
     Waypoint following local planner with waypoint lookahead for smoothing and target speed reduction.
     """
 
-    def next_waypoint_smooth_and_speed(self, smooth_lookahead=400, speed_lookahead=600) -> (Transform, float):
+    def next_waypoint_smooth_and_speed(self, smooth_lookahead=400, speed_lookahead=600,
+                                       min_speed_multiplier=0.6, speed_multiplier_slope=1.3) -> (Transform, float):
         """
         Calculate the next target waypoint and speed for the controller.
 
@@ -26,6 +27,10 @@ class SmoothWaypointFollowingLocalPlanner(SimpleWaypointFollowingLocalPlanner):
             Number of waypoints ahead to look at to compute the smoothed waypoint.
         speed_lookahead : int
             Number of waypoint to look ahaed to compute speed factor.
+        min_speed_multiplier : float
+            The minimum value for the speed multiplier.
+        speed_multiplier_slope : float
+            The rate of speed multiplier decrease for every 180 degrees of angle error.
 
         Returns
         target_waypoint : Transform
@@ -52,10 +57,10 @@ class SmoothWaypointFollowingLocalPlanner(SimpleWaypointFollowingLocalPlanner):
         if speed_lookahead > 0:
             angle_difference = self._calculate_angle_error(self.way_points_queue[speed_lookahead])
             # Angle difference is between 0 and 180, but unlikely to be more than 90
-            speed_multiplier = max(0.6, (1.0 - 1.3 * angle_difference / np.pi))
-
+            speed_multiplier = max(min_speed_multiplier,
+                                   (1.0 - speed_multiplier_slope * angle_difference / np.pi))
         else:
-            speed_multiplier = 0.0
+            speed_multiplier = 1.0
 
         return target_waypoint, speed_multiplier
 
